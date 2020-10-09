@@ -1,10 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import TopNavBar from "./Components/TopNavBar";
-import Home from "./Containers/Home";
-import AddBook from "./Containers/AddBook";
-import ViewReview from "./Containers/ViewReview";
-import AddReview from "./Containers/AddReview";
+import Home from "./Pages/Home";
+import AddBook from "./Pages/AddBook";
+import ViewReview from "./Pages/ViewReview";
+import AddReview from "./Pages/AddReview";
 
 function App() {
   return (

@@ -1,0 +1,10 @@
+.top-container {
+  width: 50%;
+  background-color: #007bff;
+  margin: 20px auto;
+}
+
+.booklist-container {
+  width: 90%;
+  margin: auto;
+}
