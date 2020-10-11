@@ -3,7 +3,6 @@ import "./BookCard.css";
 import { Card, Button } from "react-bootstrap";
 
 const BookCard = (props) => {
-  console.log(props.bookDetails)
   const { title, subtitle, author, ratings, numOfReviews } = props.bookDetails;
 
   return (

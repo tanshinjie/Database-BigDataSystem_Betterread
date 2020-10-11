@@ -20,4 +20,32 @@ export const mockData = [
         ratings:'3',
         numOfReviews:'98'
     },
+    {
+        title:'The Art of Possibility',
+        subtitle:'Transforming Professional and Personal Life',
+        author:'Rosamund Stone Zander, Benjamin Zander',
+        ratings:'3',
+        numOfReviews:'98'
+    },
+    {
+        title:'The Art of Possibility',
+        subtitle:'Transforming Professional and Personal Life',
+        author:'Rosamund Stone Zander, Benjamin Zander',
+        ratings:'3',
+        numOfReviews:'98'
+    },
+    {
+        title:'The Art of Possibility',
+        subtitle:'Transforming Professional and Personal Life',
+        author:'Rosamund Stone Zander, Benjamin Zander',
+        ratings:'3',
+        numOfReviews:'98'
+    },
+    {
+        title:'The Art of Possibility',
+        subtitle:'Transforming Professional and Personal Life',
+        author:'Rosamund Stone Zander, Benjamin Zander',
+        ratings:'3',
+        numOfReviews:'98'
+    },
 ]

@@ -1,7 +1,11 @@
 .top-container {
-  width: 50%;
-  background-color: #007bff;
-  margin: 20px auto;
+  width: 100%;
+  min-height: 400px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 123, 255, 1) 0%,
+    rgba(0, 212, 255, 0.5) 100%
+  );
 }
 
 .booklist-container {
