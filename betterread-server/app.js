@@ -27,3 +27,15 @@ connection.query($query, function(err, rows, fields) {
     console.log("Query succesfully executed: ", rows);
 });
 
+$query2 = 'SELECT asin from reviews limit 2';
+
+connection.query($query2, function(err, rows, fields) {
+  if(err){
+      console.log("An error ocurred performing the query.");
+      return;
+  }
+
+  console.log("Query succesfully executed: ", rows);
+});
+
+
