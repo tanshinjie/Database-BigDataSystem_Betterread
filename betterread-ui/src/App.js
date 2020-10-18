@@ -20,8 +20,8 @@ function App() {
         <Route path="/add_review">
           <AddReview />
         </Route>
-        <Route>
-          <ViewReview path="/view_review" />
+        <Route path="/view_review">
+          <ViewReview />
         </Route>
       </Switch>
     </Router>
