@@ -1,0 +1,19 @@
+.card-container {
+  display: flex;
+  margin: 10px 0px 10px 0px;
+  padding-bottom: 10px;
+  border-bottom: 0.5px solid black;
+}
+
+.book-title {
+  display: inline-block;
+}
+
+.add-review-btn {
+  float: right;
+}
+
+.view-review-link {
+  float: right;
+  text-decoration: underline;
+}

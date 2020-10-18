@@ -1,0 +1,14 @@
+.top-container {
+  width: 100%;
+  min-height: 400px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 123, 255, 1) 0%,
+    rgba(0, 212, 255, 0.5) 100%
+  );
+}
+
+.booklist-container {
+  width: 90%;
+  margin: auto;
+}
