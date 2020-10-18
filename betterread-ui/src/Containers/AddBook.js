@@ -20,7 +20,20 @@ const AddBook = () => {
         </div>
 
         <div class="col-sm-6">
-          Note: asiovneaovne Shinjie you got the text for notes please copy and paste here thankyouuu! :)
+          Note: 
+          <br/>
+          BetterReads has over 12 million books in its database already, so please do a search before adding a book, as it may be a duplicate. 
+          <br/>
+          <br/>
+          Guidelines:
+          <br/>
+          Title: 
+          <br/>If the book is in a series, put which book it is in parenthesis after the title. 
+          <br/>
+          <br/>
+          Author: 
+          <br/>Add author in the order they are listed on the book cover. <br/>
+
         </div>
 
       </div>
