@@ -13,15 +13,19 @@ router.get('/',(req,res)=>{
 
 router.get('/book/:id',(req,res)=>{
     // TODO: Get reviews of book with id from MySQL
-    res.send('Get list of reviews of book with ID from MySQL '+req.params.id)
+    res.send('Get list of reviews of book with ID from MySQL '+ req.params.id)
 })
 
 router.post('/add_book',(req,res)=>{
+    const {author, title} = req.body
+    console.log(author,title)
     // TODO: Add book to mongoDB
     res.send('Add book to MongoDB')
 })
 
 router.post('/add_review',(req,res)=>{
+    const {summary, review} = req.body
+    console.log(summary,review)
     // TODO: Add review of a book to MySQL
     res.send('Add review to MySQL database')
 })
