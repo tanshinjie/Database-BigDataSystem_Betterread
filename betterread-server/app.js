@@ -1,29 +1,12 @@
-let mysql = require('mysql');
+const express = require('express')
+const app = express()
+const PORT = 5000
 
-let connection = mysql.createConnection({
-    host: '54.166.186.251',
-    port: 3340,
-    user: 'root',
-    password: '',
-    database: 'kindle_reviews'
+app.use(express.json())
+const review = require('./routes/review')
+
+app.use('/',review)
+
+app.listen(PORT, () => {
+  console.log("server is running on", PORT);
 });
-
-connection.connect(function(err) {
-    if (err) {
-      return console.error('error: ' + err.message);
-    }
-  
-    console.log('Connected to the MySQL server.');
-  });
-
-$query = 'SELECT asin from reviews limit 1';
-
-connection.query($query, function(err, rows, fields) {
-    if(err){
-        console.log("An error ocurred performing the query.");
-        return;
-    }
-
-    console.log("Query succesfully executed: ", rows);
-});
-
