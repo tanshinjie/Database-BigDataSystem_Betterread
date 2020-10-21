@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import MultiSelect from "react-multi-select-component";
 
-import "./Searchbar.css";
+import "./SearchBar.css";
 
 const SearchBar = (props) => {
   const { genreSelected, setGenreSelected } = props;
