@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import TopNavBar from "./Components/TopNavBar";
 import Home from "./Pages/Home";
 import AddBook from "./Pages/AddBook";
-import ViewReview from "./Pages/ViewReview";
+import Review from "./Pages/Review";
 import AddReview from "./Pages/AddReview";
+import NoMatch from "./Pages/NoMatch";
 
 function App() {
   return (
@@ -14,14 +15,17 @@ function App() {
         <Route exact path="/">
           <Home />
         </Route>
-        <Route path="/add_book">
+        <Route path="/addbook">
           <AddBook />
         </Route>
-        <Route path="/add_review">
+        <Route path="/addreview">
           <AddReview />
         </Route>
-        <Route path="/view_review">
-          <ViewReview />
+        <Route path="/book">
+          <Review />
+        </Route>
+        <Route path="*">
+          <NoMatch />
         </Route>
       </Switch>
     </Router>
