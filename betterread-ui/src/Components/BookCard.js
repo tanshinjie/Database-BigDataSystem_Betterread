@@ -17,14 +17,14 @@ const BookCard = (props) => {
         <Button
           variant="outline-primary"
           className="add-review-btn"
-          href="/add_review"
+          href="/addreview"
         >
           Add review
         </Button>
         <Card.Subtitle className="mb-2 text-muted">{subtitle}</Card.Subtitle>
         <Card.Text className="mb-2 text-muted">{`by ${author}`}</Card.Text>
         <div>Ratings: {ratings}</div>
-        <Card.Link href="/view_review" className="view-review-link">
+        <Card.Link href="/book" className="view-review-link">
           View Reviews ({numOfReviews})
         </Card.Link>
       </Card.Body>
