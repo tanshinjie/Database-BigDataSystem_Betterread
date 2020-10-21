@@ -1,32 +1,50 @@
 import React from "react";
 import "./BookCard.css";
-import { Card, Button } from "react-bootstrap";
+import { Card, Row } from "react-bootstrap";
+import Category from "./Category";
 
 const BookCard = (props) => {
-  const { title, subtitle, author, ratings, numOfReviews } = props.bookDetails;
+  const {
+    title,
+    author,
+    ratings,
+    imgSrc,
+    numOfReviews,
+    categories,
+  } = props.bookDetails;
 
   return (
     <div className="card-container">
-      <span
-        style={{ width: "200px", height: "250px", backgroundColor: "skyblue" }}
-      ></span>
+      <img
+        src={imgSrc}
+        alt={title}
+        style={{
+          width: "200px",
+          height: "250px",
+          objectFit: "cover",
+        }}
+      />
       <Card.Body>
-        <Card.Title as="h2" className="book-title">
-          {title}
-        </Card.Title>
-        <Button
-          variant="outline-primary"
-          className="add-review-btn"
-          href="/addreview"
-        >
-          Add review
-        </Button>
-        <Card.Subtitle className="mb-2 text-muted">{subtitle}</Card.Subtitle>
-        <Card.Text className="mb-2 text-muted">{`by ${author}`}</Card.Text>
+        <Row>
+          <Card.Title as="h4" className="book-title">
+            {title}
+          </Card.Title>
+        </Row>
+        <Row>
+          <Card.Text className="mb-2 text-muted">{`by ${author}`}</Card.Text>
+        </Row>
         <div>Ratings: {ratings}</div>
-        <Card.Link href="/book" className="view-review-link">
-          View Reviews ({numOfReviews})
-        </Card.Link>
+        <Card.Text className="mb-2">Category:</Card.Text>
+        <div>
+          {categories.map((c) => (
+            <Category category={c} key={c} />
+          ))}
+        </div>
+        <Row>
+          <Card.Link href="/book" className="view-review-link">
+            View Reviews ({numOfReviews})
+          </Card.Link>
+        </Row>
       </Card.Body>
     </div>
   );
