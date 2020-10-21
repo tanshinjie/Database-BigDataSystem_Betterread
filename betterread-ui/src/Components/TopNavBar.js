@@ -9,7 +9,6 @@ const TopNavBar = () => {
         <Nav.Link href="/addbook" color="primary">
           Add Book
         </Nav.Link>
-        <Nav.Link href="/addreview">Add Review</Nav.Link>
       </Nav>
     </Navbar>
   );

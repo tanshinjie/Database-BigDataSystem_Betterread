@@ -24,7 +24,7 @@ const Review = () => {
             <div>Categories:</div>
             <div>
               {book_metadata["categories"].map((category) => (
-                <Category category={category}></Category>
+                <Category category={category} key={category}></Category>
               ))}
             </div>
           </div>
@@ -33,17 +33,19 @@ const Review = () => {
       <br />
       <h4>Reviews ({reviews.length})</h4>
       {reviews.map((review) => (
-        <Container>
+        <Container key={review.reviewerID}>
           <Row>
             <Col xs={2}>
               <Row>Reviewer:</Row>
-              <Row>Helpfulness:</Row>
+              {/* <Row>Helpfulness:</Row> */}
+              <Row>Ratings:</Row>
               <Row>Summary:</Row>
               <Row>Reviews:</Row>
             </Col>
             <Col>
               <Row>{review.reviewerName}</Row>
-              <Row>{review.helpful}</Row>
+              <Row>{review.overall}</Row>
+              {/* <Row>{review.helpful}</Row> */}
               <Row>"{review.summary}"</Row>
               <Row>"{review.reviewText}"</Row>
             </Col>
