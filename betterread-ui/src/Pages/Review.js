@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useState, useEffect,useContext } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import "./Review.css";
 import Category from "../Components/Category";
 
 const Review = () => {
+  
+  const [reviewsText,setreviewsText] = useState([])
+
+  useEffect(()=>{
+    fetch('http://localhost:5000/review/B000FC1TG2',{ //fetching data from backend review.js, not fully implemented
+        
+    }).then(res=>res.json())
+    .then(result=>{
+        console.log(result)
+        setreviewsText(result)
+    }).catch(err=>console.log(err))
+  },[])
+
+  
   return (
+    
     <Container className="container">
       <Row>
         <Col xs={4}>
@@ -53,10 +68,13 @@ const Review = () => {
         </Container>
       ))}
     </Container>
+    
   );
 };
 
 export default Review;
+
+
 
 const book_metadata = {
   asin: "1603420304",
@@ -133,8 +151,7 @@ const reviews = [
     asin: "B000F83SZQ",
     reviewerName: "Avidreader",
     helpful: [0, 0],
-    reviewText:
-      "I enjoy vintage books and movies so I enjoyed reading this book.  The plot was unusual.  Don't think killing someone in self-defense but leaving the scene and the body without notifying the police or hitting someone in the jaw to knock them out would wash today.Still it was a good read for me.",
+    reviewText: "I enjoy vintage books and movies so I enjoyed reading this book.  The plot was unusual.  Don't think killing someone in self-defense but leaving the scene and the body without notifying the police or hitting someone in the jaw to knock them out would wash today.Still it was a good read for me.",
     overall: 5.0,
     summary: "Nice vintage story",
     unixReviewTime: 1399248000,

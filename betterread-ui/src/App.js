@@ -25,7 +25,7 @@ function App() {
           <AddReview />
         </Route>
 
-        <Route path="/book">
+        <Route path="/review">
           <Review />
         </Route>
 
