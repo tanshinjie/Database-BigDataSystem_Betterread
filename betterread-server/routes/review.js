@@ -1,15 +1,61 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
+const { MongoClient } = require('mongodb');
+const MongoConnection = require('../MongoConnect')
 
-router.use((req, res, next) => {
-  // TODO: Log HTTP request to MongoDB
-  console.log("Logging request to MongoDB");
-  next();
-});
+//Connection to MongoDB
+MongoConnection.connectToDB();
 
-router.get("/", (req, res) => {
+
+// Uploads http logs to database
+router.post('/logs',async(req,res) => {
+  //console.log(db)
+  const logs = req.body
+  console.log(logs);
+  try{
+      const collection = client.db('dblogs').collection('logsRecord')
+      const result = {
+        "timeStamp":{
+            "type":"Date",
+            "default":logs.timeStamp 
+        },
+        "reqType":{
+            
+        },
+        "responseCode":{
+            
+        }
+    }
+      await collection.insertOne(result)
+      //console.log("Successfully inserted to database:", logs)
+     
+      res.status(200).send()
+  }catch(error){
+    console.log(error)
+      res.status(500).send()
+  }
+})
+
+
+router.get("/firsthundred", (req, res) => {
   // TODO: Get first 100 books in database from MongoDB
-  res.send("Getting first 100 books from MongoDB");
+  
+  const dbName = client.db('dbproj')
+  try{
+    dbName.collection("firstcollection").find().limit(100).toArray(function(err, result) {
+    if (err) throw err;
+    console.log(result);
+    //res.send(result);
+    res.send("Getting first 100 books from MongoDB");
+  });
+      }
+  catch(error){
+    console.log(error)
+    res.status(404).send()
+  }
+  
+
 });
 
 router.get("/review/:asin", (req, res) => {
@@ -19,11 +65,24 @@ router.get("/review/:asin", (req, res) => {
   );
 });
 
-router.post("/addbook", (req, res) => {
-  const { author, title } = req.body;
-  console.log(author, title);
+router.post("/addbook", async(req, res) => {
+  
   // TODO: Add book to mongoDB
-  res.send("Added book to MongoDB");
+
+  try{
+      //const collection = client.db('dbproj').collection('firstcollection')
+      const { author, title } = req.body;
+      console.log(author, title);
+      const collection = client.db('dbproj').collection('firstcollection')
+      collection.insertOne({ author, title })
+      res.send("Added book to MongoDB");
+      res.status(201).send()
+  }catch(error){
+    console.log(error)
+      res.status(500).send()
+  }
+
+  
 });
 
 router.post("/addreview", (req, res) => {

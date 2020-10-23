@@ -9,7 +9,7 @@ app.use(express.json());
 const review = require("./routes/review");
 
 app.use("/", review);
-
+app.use("/logs",review)
 app.listen(PORT, () => {
   console.log("server is running on", PORT);
 });
