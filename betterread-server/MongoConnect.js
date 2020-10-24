@@ -4,6 +4,7 @@ const client = new MongoClient(uri);
 
 const connectToDB= async()=>{
   try {
+    
     // Connect to the MongoDB cluster
     await client.connect();
     console.log("MongoDB is connected!")
@@ -15,4 +16,5 @@ const connectToDB= async()=>{
     console.error(e);
   } 
 }
-module.exports.connectToDB = connectToDB;
+module.exports.client = client;
+module.exports.connectToDB= connectToDB;

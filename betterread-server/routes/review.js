@@ -2,26 +2,33 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const { MongoClient } = require('mongodb');
-const MongoConnection = require('../MongoConnect')
-
-//Connection to MongoDB
+const  MongoConnection = require('../MongoConnect')
+//Connect to MongoDB
 MongoConnection.connectToDB();
+const client = MongoConnection.client;
 
-router.use((async(req, res, next) => {
+router.all('/',(async(req, res, next) => {
   // TODO: Log HTTP request to MongoDB
   const logs = req.body
   console.log(logs);
   try{
       const collection = client.db('dblogs').collection('logsRecord')
+      let time = Date.now;
+      console.log(time);
       const result = {
         "timeStamp":{
             "type":"Date",
-            "default":logs.timeStamp 
+            "default":new Date()
         },
         "reqType":{
+          "type":"String",
+          "default":logs.reqType
+          
             
         },
         "responseCode":{
+          "type":"Number",
+          "default":logs.responseCode
             
         }
     }
@@ -34,21 +41,25 @@ router.use((async(req, res, next) => {
       res.status(500).send()
   }
   console.log("Logging request to MongoDB");
-  next();
+  next(req,res);
 }));
 
 
 
-router.get("/", (req, res) => {
+router.get("/books", (req, res) => {
   // TODO: Get first 100 books in database from MongoDB
+  // Get data with author and title , limiting to 100 
   
   const dbName = client.db('dbproj')
   try{
-    dbName.collection("firstcollection").find().limit(100).toArray(function(err, result) {
-    if (err) throw err;
+    var query = { author: { $exists : true } , title:{ $exists : true }};
+    dbName.collection("firstcollection").find(query ).limit(100).toArray(function(err, result) {
+    
+    //res.send("Getting first 100 books from MongoDB");
     console.log(result);
     res.send(result);
     //res.send("Getting first 100 books from MongoDB");
+    //return result;
   });
       }
   catch(error){
