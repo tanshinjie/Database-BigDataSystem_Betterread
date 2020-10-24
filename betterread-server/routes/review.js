@@ -7,10 +7,8 @@ const MongoConnection = require('../MongoConnect')
 //Connection to MongoDB
 MongoConnection.connectToDB();
 
-
-// Uploads http logs to database
-router.post('/logs',async(req,res) => {
-  //console.log(db)
+router.use((async(req, res, next) => {
+  // TODO: Log HTTP request to MongoDB
   const logs = req.body
   console.log(logs);
   try{
@@ -35,10 +33,13 @@ router.post('/logs',async(req,res) => {
     console.log(error)
       res.status(500).send()
   }
-})
+  console.log("Logging request to MongoDB");
+  next();
+}));
 
 
-router.get("/firsthundred", (req, res) => {
+
+router.get("/", (req, res) => {
   // TODO: Get first 100 books in database from MongoDB
   
   const dbName = client.db('dbproj')
