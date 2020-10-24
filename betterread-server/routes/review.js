@@ -47,8 +47,8 @@ router.get("/", (req, res) => {
     dbName.collection("firstcollection").find().limit(100).toArray(function(err, result) {
     if (err) throw err;
     console.log(result);
-    //res.send(result);
-    res.send("Getting first 100 books from MongoDB");
+    res.send(result);
+    //res.send("Getting first 100 books from MongoDB");
   });
       }
   catch(error){
@@ -76,8 +76,7 @@ router.post("/addbook", async(req, res) => {
       console.log(author, title);
       const collection = client.db('dbproj').collection('firstcollection')
       collection.insertOne({ author, title })
-      res.send("Added book to MongoDB");
-      res.status(201).send()
+      res.status(201).send({messages:'Added book to MongoDB'})
   }catch(error){
     console.log(error)
       res.status(500).send()
