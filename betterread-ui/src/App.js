@@ -29,10 +29,6 @@ function App() {
           <Review />
         </Route>
 
-        <Route path="/nodetest">
-          <NodeTest />
-        </Route>
-
         <Route path="*">
           <NoMatch />
         </Route>

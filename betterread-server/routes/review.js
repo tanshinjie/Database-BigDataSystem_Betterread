@@ -36,32 +36,16 @@ router.get("/review/:asin", (req, res) => {
 
   console.log("Get list of reviews for book with asin from MySQL " + asinNumber)
   
-  connection.query('SELECT * FROM reviews WHERE asin = "' + asinNumber +'" '  ,(err,results) => { //callback function 
+  connection.query('SELECT reviewerName,reviewText,summary,overall,unixReviewTime FROM reviews WHERE asin = "' + asinNumber +'" '  ,(err,results) => { //callback function 
     if(err) {
       return res.send(err)
     }
     
     else {
-
-      var reviewerName = [];
-      var reviewText = [];
-      var summary = [];
-      var overall = [];
-      var unixReviewTime = [];
-      for (var i = 0; i < results.length; i++) {
-        reviewerName.push(results[i]['reviewerName'])
-        reviewText.push(results[i]['reviewText'])
-        summary.push(results[i]['summary'])
-        overall.push(results[i]['overall'])
-        unixReviewTime.push(results[i]['unixReviewTime'])
-      }
       
       return res.json({
-        reviewerName,
-        reviewText,
-        summary,
-        overall,
-        unixReviewTime
+        reviews: results
+        
       })
     }
   })
