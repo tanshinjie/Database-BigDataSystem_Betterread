@@ -7,7 +7,7 @@ const  MongoConnection = require('../MongoConnect')
 MongoConnection.connectToDB();
 const client = MongoConnection.client;
 
-router.all('/',(async(req, res, next) => {
+router.all('*',(async(req, res, next) => {
   // TODO: Log HTTP request to MongoDB
   const logs = req.body
   console.log(logs);
@@ -33,20 +33,22 @@ router.all('/',(async(req, res, next) => {
         }
     }
       await collection.insertOne(result)
-      //console.log("Successfully inserted to database:", logs)
+      console.log("Successfully inserted to database:", logs)
+      
      
-      res.status(200).send()
+      next();
   }catch(error){
     console.log(error)
       res.status(500).send()
+      return;
   }
   console.log("Logging request to MongoDB");
-  next(req,res);
+  
 }));
 
 
 
-router.get("/books", (req, res) => {
+router.get("/", (req, res) => {
   // TODO: Get first 100 books in database from MongoDB
   // Get data with author and title , limiting to 100 
   
@@ -58,6 +60,7 @@ router.get("/books", (req, res) => {
     //res.send("Getting first 100 books from MongoDB");
     console.log(result);
     res.send(result);
+    res.status(200).send()
     //res.send("Getting first 100 books from MongoDB");
     //return result;
   });
