@@ -6,7 +6,6 @@ import AddBook from "./Pages/AddBook";
 import Review from "./Pages/Review";
 import AddReview from "./Pages/AddReview";
 import NoMatch from "./Pages/NoMatch";
-import NodeTest from "./Pages/NodeTest";
 
 function App() {
   return (
@@ -16,7 +15,7 @@ function App() {
         <Route exact path="/">
           <Home />
         </Route>
-        
+
         <Route path="/addbook">
           <AddBook />
         </Route>
@@ -32,7 +31,6 @@ function App() {
         <Route path="*">
           <NoMatch />
         </Route>
-        
       </Switch>
     </Router>
   );
