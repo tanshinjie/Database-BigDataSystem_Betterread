@@ -10,6 +10,7 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 import ReactStars from "react-rating-stars-component";
+import { categories } from "../Utils/constant";
 
 const useStyles = makeStyles({
   root: {
@@ -32,50 +33,77 @@ const useStyles = makeStyles({
   },
 });
 
-const FilterBar = () => {
-  const [ratingsFilter, setRatingsFilter] = useState([
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
+const FilterBar = (props) => {
+  const { filterParams, setFilterParams } = props;
+  const [categoryFilter, setCategoryFilter] = useState([]);
+  const [ratingsFilter, setRatingsFilter] = useState({
+    fiveStars: false,
+    fourStars: false,
+    threeStars: false,
+    twoStars: false,
+    oneStars: false,
+    zeroStars: false,
+  });
 
   const classes = useStyles();
   const renderCategory = (categories) => {
     return (
       <div>
-        {categories.map((category) => {
-          return category.map((cItem) => {
-            return <CategoryItem label={cItem} key={cItem} />;
-          });
+        {categories.map((cItem) => {
+          return (
+            <CategoryItem
+              label={cItem}
+              key={cItem}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+            />
+          );
         })}
+        {/* {categories.map((category) => {
+          return category.map((cItem) => {
+            return (
+              <CategoryItem
+                label={cItem}
+                key={cItem}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+              />
+            );
+          });
+        })} */}
       </div>
     );
   };
 
-  const handleChange = (event) => {
+  const handleChange = (target) => {
     let newRatingFilter = ratingsFilter;
-    newRatingFilter[event.target.name] = !newRatingFilter[event.target.name];
-    setRatingsFilter([...newRatingFilter]);
+    newRatingFilter[target] = !newRatingFilter[target];
+    setRatingsFilter({ ...newRatingFilter });
+  };
+
+  const applyFilter = () => {
+    setFilterParams({
+      ...filterParams,
+      ratings: ratingsFilter,
+      categories: categoryFilter,
+    });
   };
 
   const renderCheckbox = () => {
     return (
       <FormGroup>
-        {ratingsFilter.map((checked, i) => {
+        {Object.entries(ratingsFilter).map((rating, i) => {
           return (
             <FormControlLabel
               key={i}
-              style={{ color: checked ? "#333" : "#aaa" }}
+              style={{ color: rating[1] ? "#333" : "#aaa" }}
               className={classes.label}
               control={
                 <Checkbox
-                  checked={checked}
-                  onChange={handleChange}
-                  name={i + ""}
-                  style={{ color: checked ? "#333" : "#aaa" }}
+                  checked={rating[1]}
+                  onChange={() => handleChange(rating[0])}
+                  name={rating[0]}
+                  style={{ color: rating[1] ? "#333" : "#aaa" }}
                 />
               }
               label={
@@ -99,6 +127,7 @@ const FilterBar = () => {
           variant="contained"
           color="default"
           disableElevation
+          onClick={applyFilter}
         >
           Apply
         </Button>
@@ -114,15 +143,3 @@ const FilterBar = () => {
 };
 
 export default FilterBar;
-
-const categories = [
-  ["Aeronautics & Astronautics", "Aeronautics & Space", "Aerospace"],
-  ["Beverages & Wine", "Bhagavad Gita", "Bhutan", "Bible"],
-  ["Coaching", "Coal", "Coastal West Africa", "Cocoa"],
-  ["Drama", "Drama & Plays", "Drama & Theater", "Drawing"],
-  ["Drama", "Drama & Plays", "Drama & Theater", "Drawing"],
-  ["Drama", "Drama & Plays", "Drama & Theater", "Drawing"],
-  ["Drama", "Drama & Plays", "Drama & Theater", "Drawing"],
-  ["Drama", "Drama & Plays", "Drama & Theater", "Drawing"],
-  ["Drama", "Drama & Plays", "Drama & Theater", "Drawing"],
-];

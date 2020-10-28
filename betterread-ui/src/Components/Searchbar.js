@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Container } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core";
 import SearchIcon from "@material-ui/icons/Search";
@@ -38,11 +38,23 @@ const useStyles = makeStyles({
 });
 
 const SearchBar = (props) => {
-  const { searchField, setSearchField } = props;
+  const { filterParams, setFilterParams } = props;
+  const [searchField, setSearchField] = useState("");
   const classes = useStyles();
+  const ref = useRef();
 
   const handleChange = (event) => {
-    // setSearchField(event.target.value);
+    setSearchField(event.target.value);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      setFilterParams({ ...filterParams, search: event.target.value });
+    }
+  };
+
+  const handleSearch = () => {
+    setFilterParams({ ...filterParams, search: ref.current.value });
   };
 
   return (
@@ -52,8 +64,14 @@ const SearchBar = (props) => {
         placeholder="Search by title or author"
         onChange={handleChange}
         value={searchField}
+        onKeyDown={handleKeyDown}
+        ref={ref}
       />
-      <SearchIcon className={classes.icon} fontSize="large" />
+      <SearchIcon
+        className={classes.icon}
+        fontSize="large"
+        onClick={handleSearch}
+      />
     </Container>
   );
 };

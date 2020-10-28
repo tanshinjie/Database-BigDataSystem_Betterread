@@ -8,3 +8,7 @@ h4,
 h5 {
   font-family: "Playfair Display", serif !important;
 }
+
+*:focus {
+  outline: none !important;
+}

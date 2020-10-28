@@ -7,6 +7,7 @@ import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
 import ReactStars from "react-rating-stars-component";
 import Divider from "@material-ui/core/Divider";
+import { useHistory } from "react-router-dom";
 
 const useStyles = makeStyles({
   root: {
@@ -47,8 +48,17 @@ const useStyles = makeStyles({
 const BookItem = (props) => {
   const classes = useStyles();
   const [elevation, setElevation] = useState(0);
+  const history = useHistory();
+
+  const redirectToReview = () => {
+    history.push({
+      pathname: `/review/${asin}`,
+      state: { bookDetail: props.bookDetail },
+    });
+  };
 
   const {
+    asin,
     imUrl,
     title,
     author,
@@ -58,7 +68,7 @@ const BookItem = (props) => {
   } = props.bookDetail;
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} onClick={() => redirectToReview()}>
       <Paper
         className={classes.paper}
         elevation={elevation}

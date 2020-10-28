@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -6,8 +6,12 @@ import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
 import Box from "@material-ui/core/Box";
 import Avatar from "@material-ui/core/Avatar";
+import Button from "@material-ui/core/Button";
 import Divider from "@material-ui/core/Divider";
 import ReactStars from "react-rating-stars-component";
+import axios from "axios";
+import { randomColor } from "../Utils/functions";
+import { useHistory, useLocation } from "react-router-dom";
 
 const useStyles = makeStyles({
   container: {
@@ -21,7 +25,8 @@ const useStyles = makeStyles({
   image: {
     width: 250,
     height: 350,
-    background: "purple",
+    background: "#eee",
+    objectFit: "cover",
   },
   innercontainer: {
     padding: "40px",
@@ -38,79 +43,144 @@ const useStyles = makeStyles({
     fontSize: "30px",
     marginBottom: "30px",
   },
+  review: {
+    marginBottom: "50px",
+  },
+  button: {
+    padding: "10px 20px",
+    color: "#eee",
+    backgroundColor: "#7D1616 !important",
+    margin: "20px",
+  },
 });
 
 const Review = () => {
   const classes = useStyles();
+  const [data, setData] = useState([]);
+  const location = useLocation();
+  const bookDetail = location.state.bookDetail;
+  const history = useHistory();
+
+  const redirectToAddReview = () => {
+    history.push({
+      pathname: `/addreview/${bookDetail.asin}`,
+      state: {
+        title: bookDetail.title,
+        author: bookDetail.author,
+        imUrl: bookDetail.imUrl,
+        asin: bookDetail.asin,
+      },
+    });
+  };
+
+  useEffect(() => {
+    const asin = location.state.bookDetail.asin;
+    if (data.length === 0) {
+      console.log("Getting review of asin", asin);
+      axios
+        .get(`http://localhost:5000/review/${asin}`)
+        .then((res) => {
+          console.log(res.data);
+          const reviews = res.data.reviews;
+          if (reviews) {
+            setData(reviews);
+          }
+        })
+        .catch((err) => console.log(err));
+    }
+  }, [data.length, setData, location.state.bookDetail.asin]);
 
   const renderReviews = () => {
     return (
-      <Grid container xs={12} className={classes.review}>
-        <Grid item xs={2} className={classes.hero}>
-          <Avatar className={classes.avatar}>N</Avatar>
-          <Typography style={{ marginBottom: "15px" }}>rated</Typography>
-          <ReactStars edit={false} count={5} value={5} size={40} />
-        </Grid>
-        <Grid item xs={10}>
-          <Typography variant="h4" gutterBottom>
-            Name
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Summary
-          </Typography>
-          <Typography gutterBottom>
-            "AppDynamics has placed their search bar at the top of their help
-            center, inviting visitors to ask their questions"
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Review
-          </Typography>
-          <Typography gutterBottom>{reviewText}</Typography>
-        </Grid>
-        <Divider />
-      </Grid>
+      data.length > 0 &&
+      data.map((d, i) => {
+        console.log(d);
+        return (
+          <div className={classes.review} key={i}>
+            <Grid container>
+              <Grid item xs={2} className={classes.hero}>
+                <Avatar
+                  className={classes.avatar}
+                  style={{ backgroundColor: randomColor() }}
+                >
+                  {d.reviewerName.charAt(0)}
+                </Avatar>
+                <Typography style={{ marginBottom: "15px" }}>rated</Typography>
+                <ReactStars
+                  edit={false}
+                  count={5}
+                  value={d.overall}
+                  size={40}
+                />
+              </Grid>
+              <Grid item xs={10}>
+                <Typography variant="h4" gutterBottom>
+                  {d.reviewerName}
+                </Typography>
+                <Typography variant="h5" gutterBottom>
+                  Summary
+                </Typography>
+                <Typography gutterBottom style={{ padding: "0px 20px" }}>
+                  "{d.summary}"
+                </Typography>
+                <Typography variant="h5" gutterBottom>
+                  Review
+                </Typography>
+                <Typography gutterBottom style={{ padding: "0px 20px" }}>
+                  "{d.reviewText}"
+                </Typography>
+              </Grid>
+              <Divider />
+            </Grid>
+          </div>
+        );
+      })
     );
   };
   return (
     <Container className={classes.container}>
       <Paper elevation={2} className={classes.paper}>
-        <Grid container xs={12} className={classes.innercontainer}>
+        <Grid container className={classes.innercontainer}>
           <Grid item xs={12} container style={{ marginBottom: "50px" }}>
-            <Grid item container xs={4} justify="flex-end">
+            <Grid item container xs={4} justify="center">
               <img
                 className={classes.image}
-                alt="complex"
-                src="http://ecx.images-amazon.com/images/I/51IEqPrF%2B9L._BO2,204,203,200_PIsitb-sticker-v3-big,TopRight,0,-55_SX278_SY278_PIkin4,BottomRight,1,22_AA300_SH20_OU01_.jpg"
+                alt="book cover"
+                src={bookDetail.imUrl}
               />
             </Grid>
             <Grid item xs={8}>
               <Grid item xs container direction="column" spacing={2}>
                 <Grid item xs>
                   <Typography gutterBottom variant="h4" component={"h4"}>
-                    The Interplanetary Huntress Returns
+                    {bookDetail.title} Title placeholder
                   </Typography>
                   <Typography component="h6" gutterBottom>
-                    by Arthur K. Barnes
+                    by {bookDetail.author} Author placeholder
                   </Typography>
-                  <Grid container>
-                    <Grid
-                      item
-                      xs={2}
-                      style={{ display: "flex", alignItems: "center" }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        color="textSecondary"
-                        gutterBottom
-                      >
+                  <Grid
+                    container
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <Grid item xs={2}>
+                      <Typography variant="subtitle1" color="textSecondary">
                         Ratings
                       </Typography>
                     </Grid>
                     <Grid item xs={10}>
-                      <ReactStars edit={false} count={5} value={5} size={24} />
+                      <ReactStars
+                        edit={false}
+                        count={5}
+                        value={bookDetail.overall}
+                        size={24}
+                      />
                     </Grid>
                   </Grid>
-                  <Grid container>
+                  <Grid container style={{ marginBottom: "10px" }}>
                     <Grid item xs={2}>
                       <Typography
                         variant="subtitle1"
@@ -121,7 +191,7 @@ const Review = () => {
                       </Typography>
                     </Grid>
                     <Grid item xs={10}>
-                      <Typography>Number of reviews</Typography>
+                      <Typography>{bookDetail.numOfReviews}</Typography>
                     </Grid>
                   </Grid>
 
@@ -139,7 +209,7 @@ const Review = () => {
                     }}
                   >
                     <div className={classes.categoryList}>
-                      {book_metadata.categories.map((c) => (
+                      {bookDetail.categories.map((c) => (
                         <span key={c} className={classes.categoryItem}>
                           {c}
                         </span>
@@ -150,9 +220,16 @@ const Review = () => {
               </Grid>
             </Grid>
           </Grid>
+          <Button
+            className={classes.button}
+            variant="outlined"
+            onClick={() => redirectToAddReview()}
+          >
+            Add Review
+          </Button>
           <Grid item xs={12}>
             <Typography style={{ marginBottom: "20px" }}>
-              Showing {} of {} results found
+              Showing {data.length} of {data.length} results found
             </Typography>
             <Box>{renderReviews()}</Box>
           </Grid>
@@ -163,175 +240,3 @@ const Review = () => {
 };
 
 export default Review;
-
-const reviewText = `AppDynamics has placed their search bar at the top of their help center, 
-inviting visitors to ask their questions in a natural and direct way.  As you type  
-your query, autocomplete results are shown which helps you to quickly find  
-helpful information. If you don’t see a relevant result, you can click the “See 
-All Results” button, which is located on the far inner right of the search bar.
-AppDynamics has placed their search bar at the top of their help center, 
-inviting visitors to ask their questions in a natural and direct way.  As you type 
-your query, autocomplete results are shown which helps you to quickly find 
-helpful information. If you don’t see a relevant result, you can click the “See 
-All Results” button, which is located on the far inner right of the search bar.
-AppDynamics has placed their search bar at the top of their help center, 
-inviting visitors to ask their questions in a natural and direct way.  As you type 
-your query, autocomplete results are shown which helps you to quickly find 
-helpful information. If you don’t see a relevant result, you can click the “See 
-All Results” button, which is located on the far inner right of the search bar."`;
-
-const book_metadata = {
-  asin: "1603420304",
-  description:
-    "In less time and for less money than it takes to order pizza, you can make it yourself!Three harried but heatlh-conscious college students compiled and tested this collection of more than 200 tasty, hearty, inexpensive recipes anyone can cook -- yes, anyone!Whether you're short on cash, fearful of fat, counting your calories, or just miss home cooking, The Healthy College Cookbook offers everything you need to make good food yourself.",
-  price: 7.69,
-  imUrl:
-    "http://ecx.images-amazon.com/images/I/51IEqPrF%2B9L._BO2,204,203,200_PIsitb-sticker-v3-big,TopRight,0,-55_SX278_SY278_PIkin4,BottomRight,1,22_AA300_SH20_OU01_.jpg",
-  related: {
-    also_viewed: [
-      "B001OLRKLQ",
-      "B004J35JIC",
-      "B00505UP8M",
-      "B004GTLKEQ",
-      "B005KWMS8U",
-      "B00BS03TYU",
-      "B001MT5NXW",
-      "B00A86JE3K",
-      "B00D694Y9U",
-      "B00DSVUVXY",
-      "B008EN3W6Y",
-      "B00BS03W5Q",
-      "B008161J1O",
-      "B0089LOJH2",
-      "B00ENSBJYQ",
-      "B00C7C040U",
-      "B00DH410VY",
-      "B00CMVFW4O",
-      "B00C89GS1Q",
-      "B0035FZJ9Y",
-      "B004GTLFUK",
-      "B00H24WT2E",
-      "B00CVS44OW",
-      "B00C5W32QK",
-      "B00HY0KTPK",
-      "B00BJ8IPJU",
-      "B00JEOMV1E",
-      "B0041KKLNQ",
-      "B00CVS2JYY",
-      "B00CTVOVD0",
-      "B00ET594CC",
-    ],
-    buy_after_viewing: ["B004J35JIC", "B0089LOJH2"],
-  },
-  categories: [
-    ["Books", "Cookbooks, Food & Wine", "Quick & Easy"],
-    ["Books", "Cookbooks, Food & Wine", "Special Diet"],
-    [
-      "Books",
-      "Cookbooks, Food & Wine",
-      "Vegetarian & Vegan",
-      "Non-Vegan Vegetarian",
-    ],
-    ["Kindle Store", "Kindle eBooks", "Cookbooks, Food & Wine", "Quick & Easy"],
-    [
-      "Kindle Store",
-      "Kindle eBooks",
-      "Cookbooks, Food & Wine",
-      "Special Diet",
-      "Healthy",
-    ],
-    [
-      "Kindle Store",
-      "Kindle eBooks",
-      "Cookbooks, Food & Wine",
-      "Vegetables & Vegetarian",
-    ],
-  ],
-};
-
-const reviews = [
-  {
-    reviewerID: "A1F6404F1VG29J",
-    asin: "B000F83SZQ",
-    reviewerName: "Avidreader",
-    helpful: [0, 0],
-    reviewText:
-      "I enjoy vintage books and movies so I enjoyed reading this book.  The plot was unusual.  Don't think killing someone in self-defense but leaving the scene and the body without notifying the police or hitting someone in the jaw to knock them out would wash today.Still it was a good read for me.",
-    overall: 5.0,
-    summary: "Nice vintage story",
-    unixReviewTime: 1399248000,
-    reviewTime: "05 5, 2014",
-  },
-  {
-    reviewerID: "AN0N05A9LIJEQ",
-    asin: "B000F83SZQ",
-    reviewerName: "critters",
-    helpful: [2, 2],
-    reviewText:
-      "This book is a reissue of an old one; the author was born in 1910. It's of the era of, say, Nero Wolfe. The introduction was quite interesting, explaining who the author was and why he's been forgotten; I'd never heard of him.The language is a little dated at times, like calling a gun a &#34;heater.&#34;  I also made good use of my Fire's dictionary to look up words like &#34;deshabille&#34; and &#34;Canarsie.&#34; Still, it was well worth a look-see.",
-    overall: 4.0,
-    summary: "Different...",
-    unixReviewTime: 1388966400,
-    reviewTime: "01 6, 2014",
-  },
-  {
-    reviewerID: "A795DMNCJILA6",
-    asin: "B000F83SZQ",
-    reviewerName: "dot",
-    helpful: [2, 2],
-    reviewText:
-      "This was a fairly interesting read.  It had old- style terminology.I was glad to get  to read a story that doesn't have coarse, crasslanguage.  I read for fun and relaxation......I like the free ebooksbecause I can check out a writer and decide if they are intriguing,innovative, and have enough of the command of Englishthat they can convey the story without crude language.",
-    overall: 4.0,
-    summary: "Oldie",
-    unixReviewTime: 1396569600,
-    reviewTime: "04 4, 2014",
-  },
-  {
-    reviewerID: "A1FV0SX13TWVXQ",
-    asin: "B000F83SZQ",
-    reviewerName: 'Elaine H. Turley "Montana Songbird"',
-    helpful: [1, 1],
-    reviewText:
-      "I'd never read any of the Amy Brewster mysteries until this one..  So I am really hooked on them now.",
-    overall: 5.0,
-    summary: "I really liked it.",
-    unixReviewTime: 1392768000,
-    reviewTime: "02 19, 2014",
-  },
-  {
-    reviewerID: "A3SPTOKDG7WBLN",
-    asin: "B000F83SZQ",
-    reviewerName: "Father Dowling Fan",
-    helpful: [0, 1],
-    reviewText:
-      "If you like period pieces - clothing, lingo, you will enjoy this mystery.  Author had me guessing at least 2/3 of the way through.",
-    overall: 4.0,
-    summary: "Period Mystery",
-    unixReviewTime: 1395187200,
-    reviewTime: "03 19, 2014",
-  },
-  {
-    reviewerID: "A1RK2OCZDSGC6R",
-    asin: "B000F83SZQ",
-    reviewerName: "ubavka seirovska",
-    helpful: [0, 0],
-    reviewText:
-      "A beautiful in-depth character description makes it like a fast pacing movie. It is a pity Mr Merwin did not write 30 instead only 3 of the Amy Brewster mysteries.",
-    overall: 4.0,
-    summary: "Review",
-    unixReviewTime: 1401062400,
-    reviewTime: "05 26, 2014",
-  },
-  {
-    reviewerID: "A2HSAKHC3IBRE6",
-    asin: "B000F83SZQ",
-    reviewerName: "Wolfmist",
-    helpful: [0, 0],
-    reviewText:
-      "I enjoyed this one tho I'm not sure why it's called An Amy Brewster Mystery as she's not in it very much. It was clean, well written and the characters well drawn.",
-    overall: 4.0,
-    summary: "Nice old fashioned story",
-    unixReviewTime: 1402358400,
-    reviewTime: "06 10, 2014",
-  },
-];

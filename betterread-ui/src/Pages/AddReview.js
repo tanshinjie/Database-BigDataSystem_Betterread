@@ -14,6 +14,8 @@ import Backdrop from "@material-ui/core/Backdrop";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Snackbar from "@material-ui/core/Snackbar";
 import MuiAlert from "@material-ui/lab/Alert";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 const useStyles = makeStyles({
   left: {
@@ -46,7 +48,7 @@ const useStyles = makeStyles({
     right: "30px",
     padding: "20px 40px",
     borderRadius: "40px",
-    background: "#7D1616",
+    backgroundColor: "#7D1616 !important",
     color: "#eee",
   },
   backdrop: {
@@ -56,12 +58,19 @@ const useStyles = makeStyles({
 });
 
 const AddReview = () => {
+  const location = useLocation();
+  const { title, author, imUrl, asin } = location.state;
+  console.log(location.state);
   const classes = useStyles();
   const [name, setName] = useState("Anonymous");
   const [color] = useState(randomColor());
   const [rating, setRating] = useState(0);
+  const [summary, setSummary] = useState("");
+  const [review, setReview] = useState("");
   const [openBD, setOpenBD] = useState(false);
   const [openSB, setOpenSB] = useState(false);
+  const [SBmessage, setSBmessage] = useState("");
+  const [SBseverity, setSBseverity] = useState("");
   const handleCloseBD = () => {
     setOpenBD(false);
   };
@@ -78,10 +87,25 @@ const AddReview = () => {
     setOpenBD(!openBD);
   };
 
-  const addReview = () => {
-    // TODO: Post request to add book
+  const addReview = async () => {
+    // TODO: Post request to add review
     handleToggle();
-    setTimeout(() => setOpenSB(true), 3000);
+    await axios
+      .post("http://localhost:5000/addreview", {
+        asin,
+        name,
+        summary,
+        rating,
+        review,
+      })
+      .then((res) => {
+        console.log(res.data);
+        showSnackBar(true);
+      })
+      .catch((err) => {
+        showSnackBar(false);
+      });
+    setOpenBD(false);
   };
 
   const generateRandomName = () => {
@@ -95,6 +119,24 @@ const AddReview = () => {
 
   const handleNameChange = (e) => {
     setName(e.target.value);
+  };
+
+  const showSnackBar = (success) => {
+    const message = success
+      ? `New review added!`
+      : `Unable to add review database`;
+    const severity = success ? "success" : "error";
+    setSBmessage(message);
+    setSBseverity(severity);
+    setOpenSB(true);
+  };
+
+  const handleSummary = (e) => {
+    setSummary(e.target.value);
+  };
+
+  const handleReview = (e) => {
+    setReview(e.target.value);
   };
 
   return (
@@ -112,13 +154,13 @@ const AddReview = () => {
             What do you think about the book
           </Typography>
           <Typography variant="h4" style={{ marginBottom: "10px" }}>
-            Title
+            {title}
           </Typography>
           <Typography variant="h5" style={{ marginBottom: "10px" }}>
-            by Author
+            by {author}
           </Typography>
           <img
-            src=""
+            src={imUrl}
             alt="book cover"
             style={{
               width: "250px",
@@ -177,6 +219,8 @@ const AddReview = () => {
             <TextField
               variant="outlined"
               style={{ width: "100%", marginBottom: "30px" }}
+              value={summary}
+              onChange={handleSummary}
             />
             <Typography>Review</Typography>
             <TextareaAutosize
@@ -190,6 +234,8 @@ const AddReview = () => {
                 outlineColor: "blue",
                 fontFamily: "Roboto",
               }}
+              value={review}
+              onChange={handleReview}
             />
             <Button
               color="primary"
@@ -209,9 +255,9 @@ const AddReview = () => {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
-      <Snackbar open={openSB} autoHideDuration={6000} onClose={handleCloseSB}>
-        <Alert onClose={handleCloseSB} severity="success">
-          This is a success message!
+      <Snackbar open={openSB} autoHideDuration={3000} onClose={handleCloseSB}>
+        <Alert onClose={handleCloseSB} severity={SBseverity}>
+          {SBmessage}
         </Alert>
       </Snackbar>
     </Container>
