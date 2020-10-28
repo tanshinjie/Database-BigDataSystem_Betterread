@@ -1,62 +1,184 @@
 import React from "react";
-import { Container, Row, Col } from "react-bootstrap";
-import "./Review.css";
-import Category from "../Components/Category";
+import { makeStyles } from "@material-ui/core/styles";
+import Grid from "@material-ui/core/Grid";
+import Paper from "@material-ui/core/Paper";
+import Typography from "@material-ui/core/Typography";
+import Container from "@material-ui/core/Container";
+import Box from "@material-ui/core/Box";
+import Avatar from "@material-ui/core/Avatar";
+import Divider from "@material-ui/core/Divider";
+import ReactStars from "react-rating-stars-component";
+
+const useStyles = makeStyles({
+  container: {
+    maxWidth: "1400px",
+    display: "flex",
+  },
+  paper: {
+    flexGrow: 1,
+    borderRadius: "40px",
+  },
+  image: {
+    width: 250,
+    height: 350,
+    background: "purple",
+  },
+  innercontainer: {
+    padding: "40px",
+  },
+  hero: {
+    textAlign: "center",
+    display: "flex",
+    alignItems: "center",
+    flexDirection: "column",
+  },
+  avatar: {
+    width: "100px",
+    height: "100px",
+    fontSize: "30px",
+    marginBottom: "30px",
+  },
+});
 
 const Review = () => {
+  const classes = useStyles();
+
+  const renderReviews = () => {
+    return (
+      <Grid container xs={12} className={classes.review}>
+        <Grid item xs={2} className={classes.hero}>
+          <Avatar className={classes.avatar}>N</Avatar>
+          <Typography style={{ marginBottom: "15px" }}>rated</Typography>
+          <ReactStars edit={false} count={5} value={5} size={40} />
+        </Grid>
+        <Grid item xs={10}>
+          <Typography variant="h4" gutterBottom>
+            Name
+          </Typography>
+          <Typography variant="h5" gutterBottom>
+            Summary
+          </Typography>
+          <Typography gutterBottom>
+            "AppDynamics has placed their search bar at the top of their help
+            center, inviting visitors to ask their questions"
+          </Typography>
+          <Typography variant="h5" gutterBottom>
+            Review
+          </Typography>
+          <Typography gutterBottom>{reviewText}</Typography>
+        </Grid>
+        <Divider />
+      </Grid>
+    );
+  };
   return (
-    <Container className="container">
-      <Row>
-        <Col xs={4}>
-          <img src={book_metadata["imUrl"]} alt="book cover" />
-        </Col>
-        <Col>
-          <div>
-            <div>Asin:</div>
-            <div>{book_metadata["asin"]}</div>
-            <br />
-            <div>Description:</div>
-            <div>{book_metadata["description"]}</div>
-            <br />
-            <div>Price:</div>
-            <div>{book_metadata["price"]} USD</div>
-            <br />
-            <div>Categories:</div>
-            <div>
-              {book_metadata["categories"].map((category) => (
-                <Category category={category} key={category}></Category>
-              ))}
-            </div>
-          </div>
-        </Col>
-      </Row>
-      <br />
-      <h4>Reviews ({reviews.length})</h4>
-      {reviews.map((review) => (
-        <Container key={review.reviewerID}>
-          <Row>
-            <Col xs={2}>
-              <Row>Reviewer:</Row>
-              {/* <Row>Helpfulness:</Row> */}
-              <Row>Ratings:</Row>
-              <Row>Summary:</Row>
-              <Row>Reviews:</Row>
-            </Col>
-            <Col>
-              <Row>{review.reviewerName}</Row>
-              <Row>{review.overall}</Row>
-              {/* <Row>{review.helpful}</Row> */}
-              <Row>"{review.summary}"</Row>
-              <Row>"{review.reviewText}"</Row>
-            </Col>
-          </Row>
-        </Container>
-      ))}
+    <Container className={classes.container}>
+      <Paper elevation={2} className={classes.paper}>
+        <Grid container xs={12} className={classes.innercontainer}>
+          <Grid item xs={12} container style={{ marginBottom: "50px" }}>
+            <Grid item container xs={4} justify="flex-end">
+              <img
+                className={classes.image}
+                alt="complex"
+                src="http://ecx.images-amazon.com/images/I/51IEqPrF%2B9L._BO2,204,203,200_PIsitb-sticker-v3-big,TopRight,0,-55_SX278_SY278_PIkin4,BottomRight,1,22_AA300_SH20_OU01_.jpg"
+              />
+            </Grid>
+            <Grid item xs={8}>
+              <Grid item xs container direction="column" spacing={2}>
+                <Grid item xs>
+                  <Typography gutterBottom variant="h4" component={"h4"}>
+                    The Interplanetary Huntress Returns
+                  </Typography>
+                  <Typography component="h6" gutterBottom>
+                    by Arthur K. Barnes
+                  </Typography>
+                  <Grid container>
+                    <Grid
+                      item
+                      xs={2}
+                      style={{ display: "flex", alignItems: "center" }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        color="textSecondary"
+                        gutterBottom
+                      >
+                        Ratings
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={10}>
+                      <ReactStars edit={false} count={5} value={5} size={24} />
+                    </Grid>
+                  </Grid>
+                  <Grid container>
+                    <Grid item xs={2}>
+                      <Typography
+                        variant="subtitle1"
+                        color="textSecondary"
+                        gutterBottom
+                      >
+                        Reviews
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={10}>
+                      <Typography>Number of reviews</Typography>
+                    </Grid>
+                  </Grid>
+
+                  <Typography
+                    variant="subtitle1"
+                    color="textSecondary"
+                    gutterBottom
+                  >
+                    Categories
+                  </Typography>
+                  <Container
+                    style={{
+                      width: "100%",
+                      overflowY: "scoll",
+                    }}
+                  >
+                    <div className={classes.categoryList}>
+                      {book_metadata.categories.map((c) => (
+                        <span key={c} className={classes.categoryItem}>
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </Container>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography style={{ marginBottom: "20px" }}>
+              Showing {} of {} results found
+            </Typography>
+            <Box>{renderReviews()}</Box>
+          </Grid>
+        </Grid>
+      </Paper>
     </Container>
   );
 };
 
 export default Review;
+
+const reviewText = `AppDynamics has placed their search bar at the top of their help center, 
+inviting visitors to ask their questions in a natural and direct way.  As you type  
+your query, autocomplete results are shown which helps you to quickly find  
+helpful information. If you don’t see a relevant result, you can click the “See 
+All Results” button, which is located on the far inner right of the search bar.
+AppDynamics has placed their search bar at the top of their help center, 
+inviting visitors to ask their questions in a natural and direct way.  As you type 
+your query, autocomplete results are shown which helps you to quickly find 
+helpful information. If you don’t see a relevant result, you can click the “See 
+All Results” button, which is located on the far inner right of the search bar.
+AppDynamics has placed their search bar at the top of their help center, 
+inviting visitors to ask their questions in a natural and direct way.  As you type 
+your query, autocomplete results are shown which helps you to quickly find 
+helpful information. If you don’t see a relevant result, you can click the “See 
+All Results” button, which is located on the far inner right of the search bar."`;
 
 const book_metadata = {
   asin: "1603420304",

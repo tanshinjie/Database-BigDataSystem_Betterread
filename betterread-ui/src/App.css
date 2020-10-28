@@ -1,0 +1,10 @@
+body {
+  font-family: "Playfair Display", serif;
+  background-color: #eddff3;
+  overflow-x: hidden;
+}
+
+h4,
+h5 {
+  font-family: "Playfair Display", serif !important;
+}

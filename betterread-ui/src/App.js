@@ -6,6 +6,7 @@ import AddBook from "./Pages/AddBook";
 import Review from "./Pages/Review";
 import AddReview from "./Pages/AddReview";
 import NoMatch from "./Pages/NoMatch";
+import "./App.css";
 
 function App() {
   return (
