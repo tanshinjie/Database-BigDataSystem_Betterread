@@ -1,72 +1,55 @@
-import React, { useState, useEffect } from "react";
-import "./Home.css";
-import SearchBar from "../Containers/SearchBar";
-import BookList from "../Containers/BookList";
-import { mockData } from "../mockData";
+import React, { useEffect, useState } from "react";
+import Grid from "@material-ui/core/Grid";
+import FilterBar from "../Components/FilterBar";
+import BookContainer from "../Components/BookContainer";
+import SearchBar from "../Components/Searchbar";
+import axios from "axios";
 
 const Home = () => {
-  const [searchField, setSearchField] = useState("");
-  const [genreSelected, setGenreSelected] = useState([]);
-  const [reviewNumSelected, setReviewNumSelected] = useState("");
-  const [minRatingSelected, setMinRatingSelected] = useState("");
-  const [items, setItems] = useState([]);
-
-  const fetchBooks = () => {
-    console.log("async api calls here");
-    setItems(mockData);
-  };
+  const [data, setData] = useState([]);
+  const [filterParams, setFilterParams] = useState({
+    search: "",
+    ratings: {},
+    categories: [],
+  });
 
   useEffect(() => {
-    fetchBooks();
-  }, []);
-
-  const filter = (items) => {
-    let filtered = [];
-    filtered = items.filter(
-      (item) =>
-        item.title.toLowerCase().includes(searchField) ||
-        item.author.toLowerCase().includes(searchField)
-    );
-    if (genreSelected.length !== 0) {
-      let selected_genre = [];
-      genreSelected.forEach((genre) => {
-        selected_genre.push(genre.label);
+    console.log("retrieving", filterParams);
+    axios
+      .get("http://localhost:5000/", {
+        params: {
+          filterParams,
+        },
+      })
+      .then((res) => {
+        console.log(res.data);
+        setData(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
       });
-      filtered = filtered.filter((item) => {
-        return selected_genre.includes(...item.categories);
-      });
-    }
-    if (reviewNumSelected !== -1) {
-      filtered = filtered.filter((item) => {
-        return item.numOfReviews > reviewNumSelected * 50;
-      });
-    }
-    if (minRatingSelected !== -1) {
-      filtered = filtered.filter((item) => {
-        return item.ratings >= minRatingSelected;
-      });
-    }
-    return filtered;
-  };
+  });
 
   return (
-    <div>
-      <div className="top-container">
+    <Grid container>
+      <Grid item xs={12}>
         <SearchBar
-          searchField={searchField}
-          setSearchField={setSearchField}
-          genreSelected={genreSelected}
-          reviewNumSelected={reviewNumSelected}
-          minRatingSelected={minRatingSelected}
-          setGenreSelected={setGenreSelected}
-          setReviewNumSelected={setReviewNumSelected}
-          setMinRatingSelected={setMinRatingSelected}
+          setFilterParams={setFilterParams}
+          filterParams={filterParams}
         />
-      </div>
-      <div className="booklist-container">
-        <BookList items={filter(items)} />
-      </div>
-    </div>
+      </Grid>
+      <Grid item xs={12} style={{ height: "100px" }}></Grid>
+      <Grid item xs={3}>
+        <FilterBar
+          styles={{ marginRight: "20px" }}
+          setFilterParams={setFilterParams}
+          filterParams={filterParams}
+        />
+      </Grid>
+      <Grid item xs={8}>
+        <BookContainer books={data} />
+      </Grid>
+    </Grid>
   );
 };
 

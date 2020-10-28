@@ -50,7 +50,7 @@ router.all("*", async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).send();
     return;
   }
@@ -60,7 +60,8 @@ router.all("*", async (req, res, next) => {
 router.get("/", (req, res) => {
   // TODO: Get first 100 books in database from MongoDB
   // Get data with author and title , limiting to 100
-
+  const filterParams = req.query;
+  console.log(filterParams);
   const dbName = client.db("dbproj");
   try {
     var query = { author: { $exists: true }, title: { $exists: true } };
@@ -112,8 +113,8 @@ router.post("/addbook", async (req, res) => {
 
   try {
     //const collection = client.db('dbproj').collection('firstcollection')
-    const { author, title } = req.body;
-    console.log(author, title);
+    const { author, title, description } = req.body;
+    console.log(author, title, description);
     const collection = client.db("dbproj").collection("firstcollection");
     collection.insertOne({ author, title });
     res.status(201).send({ messages: "Added book to MongoDB" });
