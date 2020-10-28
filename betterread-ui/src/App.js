@@ -15,15 +15,19 @@ function App() {
         <Route exact path="/">
           <Home />
         </Route>
+
         <Route path="/addbook">
           <AddBook />
         </Route>
+
         <Route path="/addreview">
           <AddReview />
         </Route>
-        <Route path="/book">
+
+        <Route path="/review">
           <Review />
         </Route>
+
         <Route path="*">
           <NoMatch />
         </Route>
