@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Home.css";
-import SearchBar from "../Containers/Searchbar";
+import SearchBar from "../Containers/SearchBar";
 import BookList from "../Containers/BookList";
 import { mockData } from "../mockData";
 

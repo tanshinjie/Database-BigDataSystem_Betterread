@@ -41,7 +41,7 @@ const BookCard = (props) => {
           ))}
         </div>
         <Row>
-          <Card.Link href="/book" className="view-review-link">
+          <Card.Link href="/review" className="view-review-link">
             View Reviews ({numOfReviews})
           </Card.Link>
         </Row>
