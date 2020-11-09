@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const bodyParser = require('body-parser');
+// Create application/json parser
+var jsonParser = bodyParser.json();
 const mongoose = require("mongoose");
 const { MongoClient } = require("mongodb");
 const MongoConnection = require("../MongoConnect");
@@ -82,6 +85,50 @@ router.get("/", (req, res) => {
   }
 });
 
+var urlencodedParser = bodyParser.urlencoded({extended: false});
+router.post("/filterCategory",urlencodedParser, (req, res) => {
+ 
+  const reqCat = req.body.categories; 
+  var count = Object.keys(reqCat).length;
+  var reArray= [];
+  for (var j=0;j<count;j++){
+    var print = reqCat[j];
+    //console.log(print);
+    for(var k =0; k < print.length;k++){
+      var print2= print[k];
+      
+      
+      reArray.push(print2);
+    }
+    
+    //console.log(print2);
+  }
+  console.log(reArray);
+
+  
+  try {
+    // var query = { categories : catArray };
+    const dbName = client.db("dbproj");
+    dbName
+      .collection("firstcollection")
+      .aggregate({categories: {$elemMatch: [print2]
+    }
+      })
+      //.find(query)
+      
+      .limit(5)
+      .toArray(function (err, result) {
+        
+        //console.log(result);
+        res.send(result);
+        res.status(200).send();
+        
+      });
+  } catch (error) {
+    console.log(error);
+    res.status(404).send();
+  }
+});
 router.get("/review/:asin", (req, res) => {
   // TODO: Get reviews of book given asin from MySQL
   const asinNumber = req.params.asin;
@@ -122,6 +169,8 @@ router.post("/addbook", async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 
 router.post("/addreview", (req, res) => {
   const { summary, review, asin, ratings, reviewer } = req.body;

@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const uri = "mongodb://root:12345@ec2-3-236-254-171.compute-1.amazonaws.com:27017";
+const uri = "mongodb://root:12345@ec2-3-238-114-70.compute-1.amazonaws.com:27017";
 const client = new MongoClient(uri);
 
 const connectToDB= async()=>{
