@@ -86,7 +86,10 @@ router.get("/", (req, res) => {
 });
 
 var urlencodedParser = bodyParser.urlencoded({extended: false});
-router.post("/filterCategory",urlencodedParser, (req, res) => {
+router.post("/",urlencodedParser, (req, res) => {
+
+  
+ 
  
   const reqCat = req.body.categories; 
   var count = Object.keys(reqCat).length;
@@ -116,11 +119,12 @@ router.post("/filterCategory",urlencodedParser, (req, res) => {
       })
       //.find(query)
       
-      .limit(5)
+      .limit(100)
+      
       .toArray(function (err, result) {
-        
+        result1 = result.map(({asin}) => ({asin}));
         //console.log(result);
-        res.send(result);
+        res.send(result1);
         res.status(200).send();
         
       });
@@ -159,8 +163,8 @@ router.post("/addbook", async (req, res) => {
 
   try {
     //const collection = client.db('dbproj').collection('firstcollection')
-    const { author, title } = req.body;
-    console.log(author, title);
+    const { author, title, description } = req.body;
+    console.log(author, title, description);
     const collection = client.db("dbproj").collection("firstcollection");
     collection.insertOne({ author, title });
     res.status(201).send({ messages: "Added book to MongoDB" });

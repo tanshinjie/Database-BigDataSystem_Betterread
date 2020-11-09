@@ -11,7 +11,6 @@ const review = require("./routes/review");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-
 app.use("/", review);
 app.listen(PORT, () => {
   console.log("server is running on", PORT);
