@@ -125,11 +125,22 @@ router.post("/addbook", async (req, res) => {
 });
 
 router.post("/addreview", (req, res) => {
-  const { summary, review, asin, ratings, reviewer } = req.body;
+  const { summary, review, asin, rating, name } = req.body;
   const timestamp = Date.now();
-  console.log(summary, review, asin, ratings, reviewer, timestamp);
+  console.log("Inserting review: "+summary, review, asin, rating, name, timestamp);
   // TODO: Add review of a book to MySQL
-  res.send("Added review to MySQL database");
+  var sql = "INSERT INTO reviews (asin, reviewerName, reviewText, summary, overall, reviewTime) VALUES ?";
+  var values = [
+    [asin, name, review, summary, rating, timestamp],
+  ];
+  connection.query(sql, [values], function (err, result) {
+      if (err) throw err;
+      console.log("Number of records inserted: " + result.affectedRows);
+      res.status(201).send({ messages: "New review added! to MySQL" });
+
+    });
+  
+  //res.send("Added review to MySQL database");
 });
 
 module.exports = router;
