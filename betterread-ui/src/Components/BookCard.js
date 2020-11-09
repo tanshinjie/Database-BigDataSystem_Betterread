@@ -13,6 +13,8 @@ const BookCard = (props) => {
     categories,
   } = props.bookDetails;
 
+
+
   return (
     <div className="card-container">
       <img
