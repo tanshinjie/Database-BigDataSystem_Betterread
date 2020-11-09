@@ -87,10 +87,6 @@ router.get("/", (req, res) => {
 
 var urlencodedParser = bodyParser.urlencoded({extended: false});
 router.post("/",urlencodedParser, (req, res) => {
-
-  
- 
- 
   const reqCat = req.body.categories; 
   var count = Object.keys(reqCat).length;
   var reArray= [];
@@ -117,22 +113,20 @@ router.post("/",urlencodedParser, (req, res) => {
       .aggregate({categories: {$elemMatch: [print2]
     }
       })
-      //.find(query)
-      
       .limit(100)
-      
       .toArray(function (err, result) {
         result1 = result.map(({asin}) => ({asin}));
-        //console.log(result);
         res.send(result1);
         res.status(200).send();
         
       });
+
   } catch (error) {
     console.log(error);
     res.status(404).send();
   }
 });
+
 router.get("/review/:asin", (req, res) => {
   // TODO: Get reviews of book given asin from MySQL
   const asinNumber = req.params.asin;
