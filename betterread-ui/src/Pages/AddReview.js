@@ -64,7 +64,7 @@ const AddReview = () => {
   const classes = useStyles();
   const [name, setName] = useState("Anonymous");
   const [color] = useState(randomColor());
-  const [rating, setRating] = useState(0);
+  const [overall, setOverall] = useState(0);
   const [summary, setSummary] = useState("");
   const [review, setReview] = useState("");
   const [openBD, setOpenBD] = useState(false);
@@ -95,7 +95,7 @@ const AddReview = () => {
         asin,
         name,
         summary,
-        rating,
+        overall,
         review,
       })
       .then((res) => {
@@ -114,7 +114,7 @@ const AddReview = () => {
   };
 
   const handleRatingChange = (newValue) => {
-    setRating(newValue);
+    setOverall(newValue);
   };
 
   const handleNameChange = (e) => {
@@ -213,7 +213,7 @@ const AddReview = () => {
               onChange={handleRatingChange}
               activeColor="#ffd700"
               size={50}
-              value={rating}
+              value={overall}
             />
             <Typography>Summary</Typography>
             <TextField
