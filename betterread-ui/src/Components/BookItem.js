@@ -85,7 +85,7 @@ const BookItem = (props) => {
             <Grid item container direction="column">
               <Grid item xs>
                 <Typography gutterBottom variant="h4">
-                  {title} sdkfjasdkjf
+                  {title}
                 </Typography>
                 <Typography variant="h5" gutterBottom>
                   by {author}

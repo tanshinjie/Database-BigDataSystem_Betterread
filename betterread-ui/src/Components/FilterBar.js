@@ -37,40 +37,28 @@ const FilterBar = (props) => {
   const { filterParams, setFilterParams } = props;
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [ratingsFilter, setRatingsFilter] = useState({
-    fiveStars: false,
-    fourStars: false,
-    threeStars: false,
-    twoStars: false,
-    oneStars: false,
-    zeroStars: false,
+    5: false,
+    4: false,
+    3: false,
+    2: false,
+    1: false,
+    0: false,
   });
 
   const classes = useStyles();
   const renderCategory = (categories) => {
     return (
       <div>
-        {categories.map((cItem) => {
+        {categories.map((cItem, i) => {
           return (
             <CategoryItem
               label={cItem}
-              key={cItem}
+              key={cItem + i}
               categoryFilter={categoryFilter}
               setCategoryFilter={setCategoryFilter}
             />
           );
         })}
-        {/* {categories.map((category) => {
-          return category.map((cItem) => {
-            return (
-              <CategoryItem
-                label={cItem}
-                key={cItem}
-                categoryFilter={categoryFilter}
-                setCategoryFilter={setCategoryFilter}
-              />
-            );
-          });
-        })} */}
       </div>
     );
   };
@@ -92,22 +80,27 @@ const FilterBar = (props) => {
   const renderCheckbox = () => {
     return (
       <FormGroup>
-        {Object.entries(ratingsFilter).map((rating, i) => {
+        {Object.keys(ratingsFilter).map((rating) => {
           return (
             <FormControlLabel
-              key={i}
-              style={{ color: rating[1] ? "#333" : "#aaa" }}
+              key={rating}
+              style={{ color: ratingsFilter[rating] ? "#333" : "#aaa" }}
               className={classes.label}
               control={
                 <Checkbox
-                  checked={rating[1]}
-                  onChange={() => handleChange(rating[0])}
-                  name={rating[0]}
-                  style={{ color: rating[1] ? "#333" : "#aaa" }}
+                  checked={ratingsFilter[rating]}
+                  onChange={() => handleChange(rating)}
+                  name={rating}
+                  style={{ color: ratingsFilter[rating] ? "#333" : "#aaa" }}
                 />
               }
               label={
-                <ReactStars count={5} value={5 - i} edit={false} size={24} />
+                <ReactStars
+                  count={5}
+                  value={parseInt(rating)}
+                  edit={false}
+                  size={24}
+                />
               }
             ></FormControlLabel>
           );

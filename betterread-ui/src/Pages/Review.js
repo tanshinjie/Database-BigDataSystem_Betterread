@@ -61,6 +61,8 @@ const Review = () => {
   const bookDetail = location.state.bookDetail;
   const history = useHistory();
 
+  console.log(bookDetail);
+
   const redirectToAddReview = () => {
     history.push({
       pathname: `/addreview/${bookDetail.asin}`,
@@ -175,7 +177,7 @@ const Review = () => {
                       <ReactStars
                         edit={false}
                         count={5}
-                        value={bookDetail.overall}
+                        value={bookDetail.ratings}
                         size={24}
                       />
                     </Grid>
@@ -191,7 +193,7 @@ const Review = () => {
                       </Typography>
                     </Grid>
                     <Grid item xs={10}>
-                      <Typography>{bookDetail.numOfReviews}</Typography>
+                      <Typography>{bookDetail.numOfReview}</Typography>
                     </Grid>
                   </Grid>
 

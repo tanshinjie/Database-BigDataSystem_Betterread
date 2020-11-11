@@ -1,26 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
-const { MongoClient } = require("mongodb");
-const MongoConnection = require("../MongoConnect");
-//Connect to MongoDB
-MongoConnection.connectToDB();
-const client = MongoConnection.client;
+const { client } = require("../MongoConnect");
 
-let mysql = require("mysql");
-let connection = mysql.createConnection({
+const mysql = require("mysql");
+const mysqlClient = mysql.createConnection({
   host: "54.166.186.251",
   port: 3340,
   user: "shinjie",
   password: "shinjie",
   database: "kindle_reviews",
 });
-connection.connect(function (err) {
+mysqlClient.connect(function (err) {
   if (err) {
     return console.error("error: " + err.message);
   }
-
-  console.log("Connected to the MySQL server.");
+  console.log("Connected to the MySQL server");
 });
 
 router.all("*", async (req, res, next) => {
@@ -50,55 +44,145 @@ router.all("*", async (req, res, next) => {
 
     next();
   } catch (error) {
-    // console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
     return;
   }
   console.log("Logging request to MongoDB");
 });
 
 router.get("/", (req, res) => {
-  // TODO: Get first 100 books in database from MongoDB
-  // Get data with author and title , limiting to 100
-  const filterParams = req.query;
-  console.log(filterParams);
-  const dbName = client.db("dbproj");
+  const filterParams = req.query.data;
+  const { search, categories, ratings } = JSON.parse(filterParams);
+  const dbMeta = client.db("dbMeta");
   try {
-    var query = { author: { $exists: true }, title: { $exists: true } };
-    dbName
-      .collection("firstcollection")
-      .find(query)
-      .limit(100)
-      .toArray(function (err, result) {
-        //res.send("Getting first 100 books from MongoDB");
-        console.log(result);
-        res.send(result);
-        res.status(200).send();
-        //res.send("Getting first 100 books from MongoDB");
-        //return result;
+    const pipeline = [
+      {
+        $lookup: {
+          from: "metadata",
+          localField: "asin",
+          foreignField: "asin",
+          as: "metadata",
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ["$metadata", 0] }, "$$ROOT"],
+          },
+        },
+      },
+      {
+        $project: {
+          metadata: 0,
+        },
+      },
+    ];
+    if (categories.length > 0) {
+      pipeline.unshift({
+        $match: {
+          categories: {
+            $in: categories,
+          },
+        },
+      });
+    }
+    if (search != "") {
+      pipeline.unshift({
+        $match: {
+          $text: { $search: search },
+        },
+      });
+    }
+
+    dbMeta
+      .collection("title_author")
+      .aggregate(pipeline)
+      .limit(50)
+      .toArray((err, titleAuthorDocs) => {
+        if (err) throw err;
+        let minRating = 0;
+        for (const [key, value] of Object.entries(ratings)) {
+          if (value) {
+            minRating = key;
+          }
+        }
+        const promiseArr = sqlQueryReviewCount([...titleAuthorDocs], minRating);
+        Promise.all(promiseArr)
+          .then((result) => {
+            const finalResult = result.filter((res) => res !== null);
+            res.status(200).send(finalResult);
+          })
+          .catch((error) => {
+            res.status(404).send(error);
+          });
       });
   } catch (error) {
-    console.log(error);
-    res.status(404).send();
+    res.status(404).send(error);
   }
 });
 
+function sqlQueryReviewCount(titleAuthorDocs, minRating) {
+  const promiseArr = [];
+  for (let i = 0; i < titleAuthorDocs.length; i++) {
+    const titleAuthorDoc = titleAuthorDocs[i];
+    const asin = titleAuthorDoc["asin"];
+    promiseArr.push(
+      new Promise((resolve, reject) => {
+        let query = `SELECT asin, count(*) as numberOfReview, avg(overall) as overall from reviews where asin="${asin}" group by asin `;
+        mysqlClient.query(query, (error, result) => {
+          if (error) reject(error);
+          if (minRating > 0) {
+            if (result.length > 0) {
+              if (result[0]["overall"] >= minRating) {
+                titleAuthorDoc["numOfReview"] = JSON.parse(
+                  JSON.stringify(result[0]["numberOfReview"])
+                );
+                titleAuthorDoc["ratings"] = JSON.parse(
+                  JSON.stringify(result[0]["overall"])
+                );
+                resolve(titleAuthorDoc);
+              } else {
+                resolve(null);
+              }
+            } else {
+              resolve(null);
+            }
+          } else {
+            if (result.length > 0) {
+              titleAuthorDoc["numOfReview"] = JSON.parse(
+                JSON.stringify(result[0]["numberOfReview"])
+              );
+              titleAuthorDoc["ratings"] = JSON.parse(
+                JSON.stringify(result[0]["overall"])
+              );
+              resolve(titleAuthorDoc);
+            } else {
+              titleAuthorDoc["numOfReview"] = "0";
+              titleAuthorDoc["ratings"] = "0";
+              resolve(titleAuthorDoc);
+            }
+          }
+        });
+      })
+    );
+  }
+  return promiseArr;
+}
+
 router.get("/review/:asin", (req, res) => {
-  // TODO: Get reviews of book given asin from MySQL
   const asinNumber = req.params.asin;
 
   console.log(
     "Get list of reviews for book with asin from MySQL " + asinNumber
   );
 
-  connection.query(
+  mysqlClient.query(
     'SELECT reviewerName,reviewText,summary,overall,unixReviewTime FROM reviews WHERE asin = "' +
       asinNumber +
       '" ',
     (err, results) => {
-      //callback function
       if (err) {
-        return res.send(err);
+        return res.status(500).send(err);
       } else {
         return res.json({
           reviews: results,
@@ -109,18 +193,16 @@ router.get("/review/:asin", (req, res) => {
 });
 
 router.post("/addbook", async (req, res) => {
-  // TODO: Add book to mongoDB
-
   try {
-    //const collection = client.db('dbproj').collection('firstcollection')
     const { author, title, description } = req.body;
-    console.log(author, title, description);
-    const collection = client.db("dbproj").collection("firstcollection");
-    collection.insertOne({ author, title });
-    res.status(201).send({ messages: "Added book to MongoDB" });
+    const collection = client.db("dbMeta").collection("title_author");
+    collection.insertOne({ author, title, description }).then((result) => {
+      console.log(result);
+      res.status(201).send({ messages: "Added book to MongoDB" });
+    });
   } catch (error) {
     console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
   }
 });
 
@@ -135,11 +217,10 @@ router.post("/addreview", (req, res) => {
     name,
     timestamp
   );
-  // TODO: Add review of a book to MySQL
   var sql =
     "INSERT INTO reviews (asin, reviewerName, reviewText, summary, overall, reviewTime) VALUES ?";
   var values = [[asin, name, review, summary, overall, timestamp]];
-  connection.query(sql, [values], function (err, result) {
+  mysqlClient.query(sql, [values], function (err, result) {
     if (err) throw res.status(500).send({ messages: "Fail to add review" });
     console.log("Number of records inserted: " + result.affectedRows);
     res.status(201).send({ messages: "New review added to MySQL!" });
