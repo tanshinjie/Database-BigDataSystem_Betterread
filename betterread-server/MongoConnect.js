@@ -19,4 +19,12 @@ client.db("dbMeta").collection("title_author").createIndex({
   author: "text",
 });
 
+client.db("dbMeta").collection("title_author").createIndex({
+  asin: 1,
+});
+
+client.db("dbMeta").collection("metadata").createIndex({
+  asin: 1,
+});
+
 module.exports.client = client;

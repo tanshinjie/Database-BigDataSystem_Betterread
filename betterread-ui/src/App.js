@@ -17,11 +17,11 @@ function App() {
           <Home />
         </Route>
 
-        <Route path="/addbook">
+        <Route path="/newbook">
           <AddBook />
         </Route>
 
-        <Route path="/addreview">
+        <Route path="/newreview">
           <AddReview />
         </Route>
 
