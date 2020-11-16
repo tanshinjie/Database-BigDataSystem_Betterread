@@ -62,8 +62,8 @@ const BookItem = (props) => {
     imUrl,
     title,
     author,
-    numOfReview,
-    ratings,
+    numberOfReview,
+    overall,
     categories,
   } = props.bookDetail;
 
@@ -96,14 +96,14 @@ const BookItem = (props) => {
                 >
                   <Grid item xs={2}>
                     <Typography variant="subtitle1" color="textSecondary">
-                      Ratings
+                      overall
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
                     <ReactStars
                       edit={false}
                       count={5}
-                      value={ratings}
+                      value={overall}
                       size={24}
                     />
                   </Grid>
@@ -115,7 +115,7 @@ const BookItem = (props) => {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <div>{numOfReview}</div>
+                    <div>{numberOfReview}</div>
                   </Grid>
                 </Grid>
                 <Typography
