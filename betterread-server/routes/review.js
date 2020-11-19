@@ -1,104 +1,170 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
-const { MongoClient } = require("mongodb");
-const MongoConnection = require("../MongoConnect");
-//Connect to MongoDB
-MongoConnection.connectToDB();
-const client = MongoConnection.client;
+const { client } = require("../MongoConnect");
 
-let mysql = require("mysql");
-let connection = mysql.createConnection({
+const mysql = require("mysql");
+const mysqlClient = mysql.createConnection({
   host: "54.166.186.251",
   port: 3340,
   user: "shinjie",
   password: "shinjie",
   database: "kindle_reviews",
 });
-connection.connect(function (err) {
+mysqlClient.connect(function (err) {
   if (err) {
     return console.error("error: " + err.message);
   }
-
-  console.log("Connected to the MySQL server.");
+  console.log("Connected to the MySQL server");
 });
 
 router.all("*", async (req, res, next) => {
-  // TODO: Log HTTP request to MongoDB
-  const logs = req.body;
-  console.log(logs);
   try {
     const collection = client.db("dblogs").collection("logsRecord");
-    let time = Date.now;
-    console.log(time);
     const result = {
       timeStamp: {
         type: "Date",
-        default: new Date(),
+        default: Date.now(),
       },
       reqType: {
         type: "String",
-        default: logs.reqType,
-      },
-      responseCode: {
-        type: "Number",
-        default: logs.responseCode,
+        default: req.method,
       },
     };
     await collection.insertOne(result);
-    console.log("Successfully inserted to database:", logs);
 
     next();
   } catch (error) {
-    // console.log(error);
-    res.status(500).send();
+    res.status(500).send(error);
     return;
   }
-  console.log("Logging request to MongoDB");
 });
 
 router.get("/", (req, res) => {
-  // TODO: Get first 100 books in database from MongoDB
-  // Get data with author and title , limiting to 100
-  const filterParams = req.query;
-  console.log(filterParams);
-  const dbName = client.db("dbproj");
-  try {
-    var query = { author: { $exists: true }, title: { $exists: true } };
-    dbName
-      .collection("firstcollection")
-      .find(query)
-      .limit(100)
-      .toArray(function (err, result) {
-        //res.send("Getting first 100 books from MongoDB");
-        console.log(result);
-        res.send(result);
-        res.status(200).send();
-        //res.send("Getting first 100 books from MongoDB");
-        //return result;
-      });
-  } catch (error) {
-    console.log(error);
-    res.status(404).send();
+  const filterParams = req.query.data;
+  const { search, categories, ratings } = JSON.parse(filterParams);
+
+  const ratingQuery = getRatings(ratings);
+
+  const dbMeta = client.db("dbMeta");
+
+  const pipeline = [
+    {
+      $lookup: {
+        from: "metadata",
+        localField: "asin",
+        foreignField: "asin",
+        as: "metadata",
+      },
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [{ $arrayElemAt: ["$metadata", 0] }, "$$ROOT"],
+        },
+      },
+    },
+    {
+      $project: {
+        metadata: 0,
+      },
+    },
+  ];
+  if (categories.length > 0) {
+    pipeline.push({
+      $match: {
+        categories: {
+          $in: categories,
+        },
+      },
+    });
+  }
+  if (search != "") {
+    pipeline.unshift({
+      $match: {
+        $text: { $search: search },
+      },
+    });
+  }
+
+  if (ratingQuery === "") {
+    try {
+      dbMeta
+        .collection("title_author")
+        .aggregate(pipeline)
+        .limit(5000)
+        .toArray((err, titleAuthorDocs) => {
+          if (err) throw err;
+          let asinArr = titleAuthorDocs.map((doc) => doc["asin"]);
+          asinArr = asinArr.join("','");
+          asinArr = "('" + asinArr + "')";
+
+          let query = `SELECT asin, count(*) as numberOfReview, avg(overall) as overall from reviews where asin in ${asinArr} group by asin;`;
+          mysqlClient.query(query, (err, result) => {
+            if (err) return res.status(404).send(err);
+            const data = result.map((res) => {
+              let found = titleAuthorDocs.filter(
+                (doc) => doc["asin"] === res["asin"]
+              );
+              return { ...found[0], ...res };
+            });
+            res.status(200).send(data);
+          });
+        });
+    } catch (error) {
+      return res.status(404).send(error);
+    }
+  } else {
+    let query = `SELECT asin, count(*) as numberOfReview, avg(overall) as overall from reviews where ${ratingQuery} group by asin;`;
+    mysqlClient.query(query, (err, result) => {
+      if (err) return res.status(404).send(err);
+      let asinArr = result.map((res) => res["asin"]);
+      asinArr = asinArr.slice(0, 10000);
+      if (search === "") {
+        pipeline.unshift({
+          $match: {
+            asin: {
+              $in: asinArr,
+            },
+          },
+        });
+      } else {
+        pipeline.splice(1, 0, {
+          $match: {
+            asin: {
+              $in: asinArr,
+            },
+          },
+        });
+      }
+      dbMeta
+        .collection("title_author")
+        .aggregate(pipeline)
+        .toArray((err, titleAuthorDocs) => {
+          if (err) return res.status(404).send(err);
+          const data = titleAuthorDocs.map((doc) => {
+            let found = result.filter((res) => res["asin"] === doc["asin"]);
+            return { ...found[0], ...doc };
+          });
+          return res.status(200).send(data);
+        });
+    });
   }
 });
 
 router.get("/review/:asin", (req, res) => {
-  // TODO: Get reviews of book given asin from MySQL
   const asinNumber = req.params.asin;
 
   console.log(
     "Get list of reviews for book with asin from MySQL " + asinNumber
   );
 
-  connection.query(
+  mysqlClient.query(
     'SELECT reviewerName,reviewText,summary,overall,unixReviewTime FROM reviews WHERE asin = "' +
       asinNumber +
       '" ',
     (err, results) => {
-      //callback function
       if (err) {
-        return res.send(err);
+        return res.status(500).send(err);
       } else {
         return res.json({
           reviews: results,
@@ -108,23 +174,20 @@ router.get("/review/:asin", (req, res) => {
   );
 });
 
-router.post("/addbook", async (req, res) => {
-  // TODO: Add book to mongoDB
-
+router.post("/newbook", async (req, res) => {
   try {
-    //const collection = client.db('dbproj').collection('firstcollection')
     const { author, title, description } = req.body;
-    console.log(author, title, description);
-    const collection = client.db("dbproj").collection("firstcollection");
-    collection.insertOne({ author, title });
-    res.status(201).send({ messages: "Added book to MongoDB" });
+    const collection = client.db("dbMeta").collection("title_author");
+    collection.insertOne({ author, title, description }).then((result) => {
+      console.log(result);
+      res.status(201).send({ messages: "Added book to MongoDB" });
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).send();
+    return res.status(500).send(error);
   }
 });
 
-router.post("/addreview", (req, res) => {
+router.post("/newreview", (req, res) => {
   const { summary, review, asin, overall, name } = req.body;
   const timestamp = Date.now();
   console.log(
@@ -135,11 +198,10 @@ router.post("/addreview", (req, res) => {
     name,
     timestamp
   );
-  // TODO: Add review of a book to MySQL
   var sql =
     "INSERT INTO reviews (asin, reviewerName, reviewText, summary, overall, reviewTime) VALUES ?";
   var values = [[asin, name, review, summary, overall, timestamp]];
-  connection.query(sql, [values], function (err, result) {
+  mysqlClient.query(sql, [values], function (err, result) {
     if (err) throw res.status(500).send({ messages: "Fail to add review" });
     console.log("Number of records inserted: " + result.affectedRows);
     res.status(201).send({ messages: "New review added to MySQL!" });
@@ -147,3 +209,14 @@ router.post("/addreview", (req, res) => {
 });
 
 module.exports = router;
+
+function getRatings(ratings) {
+  let ratingsStr = "";
+  for (const [key, value] of Object.entries(ratings)) {
+    if (value) {
+      if (ratingsStr) ratingsStr += " or ";
+      ratingsStr += `floor(overall)=${key}`;
+    }
+  }
+  return ratingsStr;
+}

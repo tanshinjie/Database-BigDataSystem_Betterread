@@ -37,7 +37,7 @@ const TopNavBar = () => {
         <Grid item xs={8}></Grid>
         <Grid item xs={2} align="right">
           <Typography className={classes.addbook} variant="h6">
-            <Link href="/addbook" style={{ position: "relative", top: "10px" }}>
+            <Link href="/newbook" style={{ position: "relative", top: "10px" }}>
               Add Book
             </Link>
           </Typography>

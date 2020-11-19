@@ -10,5 +10,5 @@ const review = require("./routes/review");
 
 app.use("/", review);
 app.listen(PORT, () => {
-  console.log("server is running on", PORT);
+  console.log("Server is running on", PORT);
 });

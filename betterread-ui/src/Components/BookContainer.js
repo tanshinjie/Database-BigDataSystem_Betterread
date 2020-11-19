@@ -4,7 +4,6 @@ import Container from "@material-ui/core/Container";
 import Paper from "@material-ui/core/Paper";
 import Pagination from "@material-ui/lab/Pagination";
 import { makeStyles } from "@material-ui/core/styles";
-import { mockData } from "../mockData";
 import BookItem from "./BookItem";
 
 const useStyles = makeStyles({
@@ -27,19 +26,20 @@ const useStyles = makeStyles({
 
 const REVIEW_PER_PAGE = 10;
 
-const BookContainer = () => {
+const BookContainer = (props) => {
+  const { books } = props;
   const classes = useStyles();
   const [page, setPage] = React.useState(1);
   const handleChange = (event, value) => {
     setPage(value);
   };
 
-  const numberOfPage = Math.ceil(mockData.length / REVIEW_PER_PAGE);
+  const numberOfPage = Math.ceil(books.length / REVIEW_PER_PAGE);
 
   const renderBooklist = () => {
     const startIndex = (page - 1) * REVIEW_PER_PAGE;
     const endIndex = page * REVIEW_PER_PAGE;
-    const slicedData = mockData.slice(startIndex, endIndex);
+    const slicedData = books.slice(startIndex, endIndex);
     return slicedData.map((d) => (
       <BookItem key={d.asin} bookDetail={d}></BookItem>
     ));
@@ -51,7 +51,7 @@ const BookContainer = () => {
         variant="h2"
         style={{ textAlign: "center", marginTop: "100px" }}
       >
-        No result founds :(
+        No result founds
       </Typography>
     );
   };
@@ -61,7 +61,7 @@ const BookContainer = () => {
       <>
         <Typography variant="subtitle1">
           Showing {page === 1 ? 1 : (page - 1) * REVIEW_PER_PAGE + 1} -{" "}
-          {page * REVIEW_PER_PAGE} of {mockData.length} results found
+          {page * REVIEW_PER_PAGE} of {books.length} results found
         </Typography>
         <Container className={classes.container}>{renderBooklist()}</Container>
         <Pagination count={numberOfPage} page={page} onChange={handleChange} />
@@ -72,14 +72,7 @@ const BookContainer = () => {
   return (
     <Container>
       <Paper elevation={2} className={classes.root}>
-        {/* <Typography variant="subtitle1">
-          Showing {page === 1 ? 1 : (page - 1) * REVIEW_PER_PAGE + 1} -{" "}
-          {page * REVIEW_PER_PAGE} of {mockData.length} results found
-        </Typography> */}
-        {/* <Container className={classes.container}> */}
-        {mockData.length === 0 ? renderPlaceholder() : renderContent()}
-        {/* </Container> */}
-        {/* <Pagination count={numberOfPage} page={page} onChange={handleChange} /> */}
+        {books.length === 0 ? renderPlaceholder() : renderContent()}
       </Paper>
     </Container>
   );

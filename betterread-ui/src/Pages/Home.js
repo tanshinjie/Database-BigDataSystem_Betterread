@@ -18,7 +18,7 @@ const Home = () => {
     axios
       .get("http://localhost:5000/", {
         params: {
-          filterParams,
+          data: JSON.stringify(filterParams),
         },
       })
       .then((res) => {
@@ -28,7 +28,7 @@ const Home = () => {
       .catch((err) => {
         console.log(err);
       });
-  });
+  }, [filterParams]);
 
   return (
     <Grid container>

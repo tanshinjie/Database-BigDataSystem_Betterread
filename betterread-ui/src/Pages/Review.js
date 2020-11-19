@@ -61,9 +61,11 @@ const Review = () => {
   const bookDetail = location.state.bookDetail;
   const history = useHistory();
 
+  console.log(bookDetail);
+
   const redirectToAddReview = () => {
     history.push({
-      pathname: `/addreview/${bookDetail.asin}`,
+      pathname: `/newreview/${bookDetail.asin}`,
       state: {
         title: bookDetail.title,
         author: bookDetail.author,
@@ -191,7 +193,7 @@ const Review = () => {
                       </Typography>
                     </Grid>
                     <Grid item xs={10}>
-                      <Typography>{bookDetail.numOfReviews}</Typography>
+                      <Typography>{bookDetail.numberOfReview}</Typography>
                     </Grid>
                   </Grid>
 
