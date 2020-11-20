@@ -1,51 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const { client } = require("../MongoConnect");
-
-const mysql = require("mysql");
-const mysqlClient = mysql.createConnection({
-  host: "54.166.186.251",
-  port: 3340,
-  user: "shinjie",
-  password: "shinjie",
-  database: "kindle_reviews",
-});
-mysqlClient.connect(function (err) {
-  if (err) {
-    return console.error("error: " + err.message);
-  }
-  console.log("Connected to the MySQL server");
-});
+const { mongoClient, mysqlClient } = require("./database");
 
 router.all("*", async (req, res, next) => {
   try {
-    const collection = client.db("dblogs").collection("logsRecord");
+    const collection = mongoClient.db("dblogs").collection("logsRecord");
     const result = {
-      timeStamp: {
-        type: "Date",
-        default: Date.now(),
-      },
-      reqType: {
-        type: "String",
-        default: req.method,
-      },
+      timeStamp: Date.now(),
+      reqType: req.method,
+      resCode: 200,
     };
     await collection.insertOne(result);
-
     next();
   } catch (error) {
-    res.status(500).send(error);
-    return;
+    return res.status(500).send(error);
   }
 });
 
 router.get("/", (req, res) => {
-  const filterParams = req.query.data;
-  const { search, categories, ratings } = JSON.parse(filterParams);
+  let filterParams = req.query.data;
+  filterParams = filterParams ? JSON.parse(filterParams) : {};
+  const { search, categories, ratings } = filterParams;
+  console.log(search, categories, ratings);
 
   const ratingQuery = getRatings(ratings);
-
-  const dbMeta = client.db("dbMeta");
+  const dbMeta = mongoClient.db("dbMeta");
 
   const pipeline = [
     {
@@ -91,7 +70,7 @@ router.get("/", (req, res) => {
       dbMeta
         .collection("title_author")
         .aggregate(pipeline)
-        .limit(5000)
+        .limit(3000)
         .toArray((err, titleAuthorDocs) => {
           if (err) throw err;
           let asinArr = titleAuthorDocs.map((doc) => doc["asin"]);
@@ -153,11 +132,6 @@ router.get("/", (req, res) => {
 
 router.get("/review/:asin", (req, res) => {
   const asinNumber = req.params.asin;
-
-  console.log(
-    "Get list of reviews for book with asin from MySQL " + asinNumber
-  );
-
   mysqlClient.query(
     'SELECT reviewerName,reviewText,summary,overall,unixReviewTime FROM reviews WHERE asin = "' +
       asinNumber +
@@ -174,20 +148,19 @@ router.get("/review/:asin", (req, res) => {
   );
 });
 
-router.post("/newbook", async (req, res) => {
+router.post("/book", async (req, res) => {
   try {
     const { author, title, description } = req.body;
-    const collection = client.db("dbMeta").collection("title_author");
+    const collection = mongoClient.db("dbMeta").collection("title_author");
     collection.insertOne({ author, title, description }).then((result) => {
-      console.log(result);
-      res.status(201).send({ messages: "Added book to MongoDB" });
+      return res.status(201).send({ messages: "Added book to MongoDB" });
     });
   } catch (error) {
     return res.status(500).send(error);
   }
 });
 
-router.post("/newreview", (req, res) => {
+router.post("/review", (req, res) => {
   const { summary, review, asin, overall, name } = req.body;
   const timestamp = Date.now();
   console.log(
@@ -198,10 +171,10 @@ router.post("/newreview", (req, res) => {
     name,
     timestamp
   );
-  var sql =
+  const query =
     "INSERT INTO reviews (asin, reviewerName, reviewText, summary, overall, reviewTime) VALUES ?";
-  var values = [[asin, name, review, summary, overall, timestamp]];
-  mysqlClient.query(sql, [values], function (err, result) {
+  const values = [[asin, name, review, summary, overall, timestamp]];
+  mysqlClient.query(query, [values], function (err, result) {
     if (err) throw res.status(500).send({ messages: "Fail to add review" });
     console.log("Number of records inserted: " + result.affectedRows);
     res.status(201).send({ messages: "New review added to MySQL!" });

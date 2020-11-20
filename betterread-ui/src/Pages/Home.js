@@ -16,13 +16,12 @@ const Home = () => {
   useEffect(() => {
     console.log("retrieving", filterParams);
     axios
-      .get("http://localhost:5000/", {
+      .get(`http://${window.location.hostname}:5000/api/`, {
         params: {
           data: JSON.stringify(filterParams),
         },
       })
       .then((res) => {
-        console.log(res.data);
         setData(res.data);
       })
       .catch((err) => {

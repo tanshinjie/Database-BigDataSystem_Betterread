@@ -91,7 +91,7 @@ const AddReview = () => {
     // TODO: Post request to add review
     handleToggle();
     await axios
-      .post("http://localhost:5000/newreview", {
+      .post(`http://${window.location.hostname}:5000/api/review`, {
         asin,
         name,
         summary,
