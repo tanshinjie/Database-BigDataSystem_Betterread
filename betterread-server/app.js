@@ -6,9 +6,10 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-const review = require("./routes/review");
+const api = require("./api");
 
-app.use("/", review);
+app.use("/api", api);
+
 app.listen(PORT, () => {
-  console.log("Server is running on", PORT);
+  console.log("API server is running on port:", PORT);
 });
