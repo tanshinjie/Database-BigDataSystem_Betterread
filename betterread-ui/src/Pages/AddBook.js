@@ -90,7 +90,7 @@ const AddBook = () => {
     console.log(title, author, description);
     handleToggle();
     await axios
-      .post("http://localhost:5000/api/book", { title, author, description })
+      .post(`http://${window.location.hostname}:5000/api/book`, { title, author, description })
       .then((res) => {
         console.log(res.data);
         showSnackBar(1);

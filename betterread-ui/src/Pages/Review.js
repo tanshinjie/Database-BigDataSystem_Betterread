@@ -80,7 +80,7 @@ const Review = () => {
     if (data.length === 0) {
       console.log("Getting review of asin", asin);
       axios
-        .get(`http://localhost:5000/api/review/${asin}`)
+        .get(`http://${window.location.hostname}:5000/api/review/${asin}`)
         .then((res) => {
           console.log(res.data);
           const reviews = res.data.reviews;
