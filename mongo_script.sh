@@ -15,11 +15,10 @@ echo "=== Running Set Up for Mongo Instance === "
 
 # download data
 {
-    wget -c wget -c https://istd50043.s3-ap-southeast-1.amazonaws.com/meta_kindle_store.zip -O meta_kindle_store.zip -O meta_kindle_store.zip
-    sudo apt install unzip
-    unzip meta_kindle_store.zip
-    rm -rf *.zip
-    wget -c https://www.dropbox.com/s/5tn7fuh7czfbjya/setupmongo.js?dl=0 -O setupmongo.js
+    #wget -c https://www.dropbox.com/s/2loaok4f4dda580/metadata_clean.txt?dl=0t -O metadata_clean.txt
+    wget -c https://metadataclean.s3.amazonaws.com/metadata.json -O metadata_clean.json
+    wget -c https://metadataclean.s3.amazonaws.com/book_title_author.json -O title_author.json
+    wget -c https://www.dropbox.com/s/9f209e96fpntmod/mongod.conf?dl=0 -O mongod.conf
 } || {
     # catch
     echo "ERROR: downloading data"
@@ -34,26 +33,24 @@ echo "=== Running Set Up for Mongo Instance === "
 
 # set up admin user
 
-while :
-do
-    if mongo localhost:27017/admin --eval 'db.createUser({ user: "admin", pwd: "password", roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]})' ; then
-        break
-    else
-        echo "Command failed, retrying..."
-    fi
-done
+# if mongo localhost:27017/admin --eval 'db.createUser({ user: "admin", pwd: "password", roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]})' ; then
+#         break
+#     else
+#         echo "Command failed, retrying..."
+#     fi
 
 
-echo "Changing mongd.conf"
-sudo sed -i "s,\\(^[[:blank:]]*bindIp:\\) .*,\\1 0.0.0.0," /etc/mongod.conf
-sudo sh -c 'echo "security:\n  authorization : enabled" >> /etc/mongod.conf'
+echo "Changing mongod.conf"
+# sudo sed -i "s,\\(^[[:blank:]]*bindIp:\\) .*,\\1 0.0.0.0," /etc/mongod.conf
+# sudo sh -c 'echo "security:\n  authorization : enabled" >> /etc/mongod.conf'
+sudo cat mongod.conf > /etc/mongod.conf #replace  conf file 
 sudo service mongod restart
 
 # import dataset
 {
     echo "Importing dataset"
-    mongoimport -d isit_database_mongo -c kindle_metadata --file meta_Kindle_Store.json --authenticationDatabase admin --username 'admin' --password 'password' --legacy
-    mongoimport -d isit_database_mongo -c categories --drop --file categories.json --authenticationDatabase admin --username 'admin' --password 'password'
+    mongoimport -d dbMeta -c kindle_metadata --file metadata_clean.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
+    mongoimport -d dbMeta -c title_author --file title_author.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
 } || {
     echo "ERROR: importing data to mongo"
 }
