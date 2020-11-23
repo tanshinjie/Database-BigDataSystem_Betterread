@@ -33,11 +33,11 @@ echo "=== Running Set Up for Mongo Instance === "
 
 # set up admin user
 
-# if mongo localhost:27017/admin --eval 'db.createUser({ user: "admin", pwd: "password", roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]})' ; then
-#         break
-#     else
-#         echo "Command failed, retrying..."
-#     fi
+if mongo localhost:27017/admin --eval 'db.createUser({ user: "admin", pwd: "password", roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]})' ; then
+        break
+    else
+        echo "Command failed, retrying..."
+    fi
 
 
 echo "Changing mongod.conf"
