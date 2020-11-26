@@ -35,7 +35,7 @@ echo "=== Running Set Up for Mongo Instance === "
 
 if mongo localhost:27017/admin --eval 'db.createUser({ user: "admin", pwd: "password", roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ]})' ; then
         break
-    else
+else
         echo "Command failed, retrying..."
     fi
 
@@ -43,7 +43,8 @@ if mongo localhost:27017/admin --eval 'db.createUser({ user: "admin", pwd: "pass
 echo "Changing mongod.conf"
 # sudo sed -i "s,\\(^[[:blank:]]*bindIp:\\) .*,\\1 0.0.0.0," /etc/mongod.conf
 # sudo sh -c 'echo "security:\n  authorization : enabled" >> /etc/mongod.conf'
-sudo cat mongod.conf > /etc/mongod.conf #replace  conf file 
+#sudo cat mongod.conf > /etc/mongod.conf #replace  conf file 
+sudo mv -f  mongod.conf /etc/mongod.conf
 sudo service mongod restart
 
 # import dataset
