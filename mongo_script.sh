@@ -16,8 +16,9 @@ echo "=== Running Set Up for Mongo Instance === "
 # download data
 {
     #wget -c https://www.dropbox.com/s/2loaok4f4dda580/metadata_clean.txt?dl=0t -O metadata_clean.txt
-    wget -c https://metadataclean.s3.amazonaws.com/metadata.json -O metadata_clean.json
-    wget -c https://metadataclean.s3.amazonaws.com/book_title_author.json -O title_author.json
+    # wget -c https://metadataclean.s3.amazonaws.com/metadata.json -O metadata_clean.json
+    # wget -c https://metadataclean.s3.amazonaws.com/book_title_author.json -O title_author.json
+    wget -c https://metadataclean.s3.amazonaws.com/full_metadata.json -O metadata_clean.json
     wget -c https://www.dropbox.com/s/9f209e96fpntmod/mongod.conf?dl=0 -O mongod.conf
 } || {
     # catch
@@ -51,7 +52,7 @@ sudo service mongod restart
 {
     echo "Importing dataset"
     mongoimport -d dbMeta -c kindle_metadata --file metadata_clean.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
-    mongoimport -d dbMeta -c title_author --file title_author.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
+    #mongoimport -d dbMeta -c title_author --file title_author.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
 } || {
     echo "ERROR: importing data to mongo"
 }
