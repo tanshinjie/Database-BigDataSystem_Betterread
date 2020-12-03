@@ -1,0 +1,33 @@
+{
+    "region_name": "us-east-1",
+    "security_group_name": "betterread",
+    "key_name": "betterread",
+    "namenode_public_ip": "",
+    "excludes": [],
+    "includes": [],
+    "node_offset": 0,
+    "number_of_production_server": 3,
+    "number_of_analytics_server": 4,
+    "production_server": {
+        "image_id": "ami-0885b1f6bd170450c",
+        "instance_type": "t2.micro",
+        "block_device_mappings": []
+    },
+    "analytics_server": {
+        "image_id": "ami-0885b1f6bd170450c",
+        "instance_type": "t2.xlarge",
+        "block_device_mappings": [
+            {
+                "DeviceName": "/dev/sda1",
+                "Ebs": {
+                    "VolumeSize": 32,
+                    "VolumeType": "gp2"
+                }
+            }
+        ]
+    },
+    "public_ips": [],
+    "private_ips": [],
+    "hosts_name": [],
+    "host_ip_map": {}
+}
