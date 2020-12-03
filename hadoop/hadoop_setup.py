@@ -11,9 +11,9 @@ import copy
 
 REGION_NAME = "us-east-1"
 
-aws_access_key_id = "ASIAVMPMSHONN7AB6QJX"
-aws_secret_access_key = "YpTA/EqSRR7c3feIX/vv8fmjXIuEEZSBwkWHWBxq"
-aws_session_token = "FwoGZXIvYXdzEEgaDJrRc+tSk0CkWV9J3CLNAV9Kp7fVDfyPVhlA/oTFJH0namIwgGIc4awwXszXGjz6GGJeN65Gly5tY3V8BAfo5ghryJ+vbrOr/P7ufgrm7wBUkPdJOkiQESsQT8kma50LocsqSrMMjWTN9okird6Lpx3NeTybzFxGfftpRR3SRd6mP/DTjDpaLX4s0YI2j+CruniC+5ygD7IadY7sWEqoa+L9RSNAD6fx5vmiHgCbh862/tuYHy5XdpAlUR4rBitULmzA4UoyOWZ9ieRBtwWbRDg6KTHnAQ48Z1b8WrEo/vaj/gUyLbU7CYjCfX8YcJcrRBbncF75VlA54KZXtNF55kz78mgbc6ZlZUrW3BANVaX2jQ=="
+aws_access_key_id = ""
+aws_secret_access_key = ""
+aws_session_token = ""
 
 
 if __name__ == "__main__":
