@@ -1,29 +1,54 @@
+from hadoop_scale_down import KEY_NAME, NUM_OF_INSTANCES, REGION_NAME, SECURITY_GROUP_NAME
 import boto3
 import pprint as pp
 import os
 import paramiko
 import time
 from botocore.exceptions import ClientError
+import json
+import getpass
 
-REGION_NAME = "us-east-1"
-SECURITY_GROUP_NAME = "betterread"
-KEY_NAME = "ec2-keypair"
-NUM_OF_INSTANCES = 3
+config = json.load(open('settings/config.json', "r"))
+SECURITY_GROUP_NAME = config["security_group_name"]
+KEY_NAME = config["key_name"]
+NUM_OF_INSTANCES = config["number_of_production_server"]
+REGION_NAME = 'us-east-1'
+with open('aws_token.txt','r') as f:
+    tokens = []
+    for i in f.readlines():
+        print(r'{}'.format(i))
+        if i[0:17] == 'aws_access_key_id':
+            tokens.append(i[18:-1])
+        elif i[0:21] == 'aws_secret_access_key':
+            tokens.append(i[22:-1])
+        elif i[0:17] == 'aws_session_token':
+            tokens.append(i[18:])
+    print(tokens)
 
-aws_access_key_id = "ASIAVMPMSHONO7WXA4LP"
-aws_secret_access_key = "JoePKBzMi0JNUSIc/EKNidJO73gC9/5W6dM0sMon"
-aws_session_token = "FwoGZXIvYXdzEBIaDI1LtK9fUP5GaUjLWCLNAT2jCn4iQzIwW7cCGguGGHzeBuNZ3gUCteSM31mNFtWvLBUlaA6ss7BprlPGx+ONutaYpY+QHUjeOmn/lTDBv7yDcfjz2zpFSAhsn8/rvBhQSdjuK7HhZ5nOhoxc75DJLrYoIEtJfZqatJt8JoVNFTLJOIl5TM1uTCZ0PK3fxw07uRXz6Zn0fOqfK/cdMqF8uiKgt7nQSnXfgI7tCMvAJ9+2qRb6UhrG652ivqcSR+9KygwGfeTnWbE9QxJl0+wE1RWnUH0p9yjPD8hsvrko6+zf/QUyLQdTYQY1qvHl4y236zDDQxJhQ/nPQsWYu3i3RaK/ztw4Bf0b1T3vvM/gwa/MGQ=="
+aws_access_key_id = tokens[0]
+aws_secret_access_key = tokens[1]
+aws_session_token = tokens[2]
+
+session = boto3.session.Session(
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    aws_session_token=aws_session_token,
+    region_name=REGION_NAME,)
+try:
+    ec2 = session.client("ec2")
+    ec2_resource = session.resource("ec2")
+except:
+    print('get fucked')
 
 
 def generate_key_pairs(key_name):
-    print("Generating a unique key for EC2 instances")
-    os.system("rm {}.pem".format(key_name))
-    outfile = open("{}.pem".format(key_name), "w+")
+    print("Generating a new key for EC2 instances")
+    outfile = open("./settings/{}.pem".format(key_name), "w+")
     key_pair = ec2.create_key_pair(KeyName=key_name)
     KeyPairOut = str(key_pair["KeyMaterial"])
     outfile.write(KeyPairOut)
-    print("Finish creating EC2 key paris")
-    os.system("chmod 400 {}.pem".format(key_name))
+    print("Finish creating EC2 key pair")
+    os.system("chmod 400 ./settings/{}.pem".format(key_name))
 
 
 def create_security_group(security_group_name):
@@ -92,8 +117,11 @@ def create_new_webserver_instance(security_group_name, key_name, numofinstances)
             print("key-pair: {} exists.".format(key_name))
             ec2.delete_key_pair(KeyName=key_name)
             print("Deleting existing key-pair", key_name)
+            #should delete setting/key_name.pem
+            os.remove("./settings/{}.pem".format(key_name))
             break
-        generate_key_pairs(key_name)
+    print('calling generate keys')
+    generate_key_pairs(key_name)
 
     try:
         new_instances = ec2_resource.create_instances(
@@ -115,7 +143,7 @@ def create_new_webserver_instance(security_group_name, key_name, numofinstances)
 
 
 def execute_commands_in_instance_mysql(public_ip_address, key_name):
-    key = paramiko.RSAKey.from_private_key_file(key_name + ".pem")
+    key = paramiko.RSAKey.from_private_key_file('settings/'+key_name + ".pem")
 
     client = paramiko.SSHClient()
 
@@ -123,23 +151,22 @@ def execute_commands_in_instance_mysql(public_ip_address, key_name):
 
     instance_ip = public_ip_address
 
-    # cmd7 = "wget https://kindlemetadata.s3-us-west-2.amazonaws.com/kindle_reviews.csv"
-    # cmd1 = "wget https://kindlemetadata.s3-us-west-2.amazonaws.com/setup_mysql_new.sh"
-    # cmd2 = "chmod +x setup_mysql_new.sh"
-    # cmd3 = "sh setup_mysql_new.sh"
-    # cmd4 = "wget https://kindlemetadata.s3-us-west-2.amazonaws.com/setup_tables.sh"
-    # cmd5 = "chmod +x setup_tables.sh"
-    # cmd6 = "sh setup_tables.sh"
-    # cmds = [cmd7, cmd1, cmd2, cmd3, cmd4, cmd5, cmd6]
-    cmds = []
+    cmd1 = 'wget --output-document=setup_sql.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mysql_script/load_sql_db.sh'
+    cmd2 = 'chmod +x setup_sql.sh'
+    cmd3 = "./setup_sql.sh"
+    cmd4 = 'rm setup_sql.sh;ls'
+    cmds = [cmd1,cmd2,cmd3,cmd4]
 
     try:
 
         client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
 
+        print("Setting up MySQL on @ ip:{}".format(public_ip_address))
+
         # Execute a command(cmd) after connecting/ssh to an instance
         for cmd in cmds:
             stdin, stdout, stderr = client.exec_command(cmd)
+            print(stdout)
             print(stdout.channel.recv_exit_status())
 
         client.close()
@@ -149,7 +176,7 @@ def execute_commands_in_instance_mysql(public_ip_address, key_name):
 
 
 def execute_commands_in_instance_mongodb(public_ip_address, key_name):
-    key = paramiko.RSAKey.from_private_key_file(key_name + ".pem")
+    key = paramiko.RSAKey.from_private_key_file('settings/'+key_name + ".pem")
 
     client = paramiko.SSHClient()
 
@@ -157,21 +184,23 @@ def execute_commands_in_instance_mongodb(public_ip_address, key_name):
 
     # Connect/ssh to an instance
     instance_ip = public_ip_address
+       
+    cmd1 = 'wget --output-document=mongo_script.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mongo_script/mongo_script.sh'
+    cmd2 = './mongo_script.sh'
+    cmd3 = './mongo_script.sh'
 
-    # cmd1 = "wget https://kindlemetadata.s3-us-west-2.amazonaws.com/setup_mongo.sh"
-    # cmd2 = "chmod +x setup_mongo.sh"
-    # cmd3 = "sh setup_mongo.sh"
-    # cmds = [cmd1,cmd2,cmd3]
-
-    cmds = []
+    cmds = [cmd1,cmd2,cmd3]
 
     try:
 
         client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
 
+        print("Setting up MongoDB on @ ip:{}".format(public_ip_address))
+
         # Execute a command(cmd) after connecting/ssh to an instance
         for cmd in cmds:
             stdin, stdout, stderr = client.exec_command(cmd)
+            print(stdout)
             print(stdout.channel.recv_exit_status())
 
         client.close()
@@ -184,7 +213,7 @@ def execute_commands_in_instance_mongodb(public_ip_address, key_name):
 def execute_commands_in_instance_server(
     public_ip_address, key_name, github_username, github_password
 ):
-    key = paramiko.RSAKey.from_private_key_file(key_name + ".pem")
+    key = paramiko.RSAKey.from_private_key_file('settings/'+key_name + ".pem")
 
     client = paramiko.SSHClient()
 
@@ -192,25 +221,19 @@ def execute_commands_in_instance_server(
 
     instance_ip = public_ip_address
 
-    # cmd1 = "wget https://kindlemetadata.s3-us-west-2.amazonaws.com/pipinstalllibs.sh"
-    # cmd2 = "chmod +x pipinstalllibs.sh"
-    # cmd3 = "sh pipinstalllibs.sh"
-    # cmd4 = "git clone https://github.com/yqyqyq123/50.043-project.git"
-    # text = " ".join(iplist)
-    # cmd5 = "echo " + text + "> ip.txt"
-    # cmd6 = "echo " + text + "> /home/ubuntu/50.043-project/flaskapp/ip.txt"
-    # cmd7 = "wget https://kindlemetadata.s3-us-west-2.amazonaws.com/flask_setup.sh"
-    # cmd8 = "screen -d -m bash flask_setup.sh"
-
-    # cmds = [cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8]
     cmd1 = "git clone https://{}:{}@github.com/tanshinjie/database_project.git".format(
         github_username, github_password
     )
-    # cmd2 = "sh ~/database_project/setup.sh"
-    cmds = [cmd1]
+    #cmd1 = 'sudo apt update;sudo apt install subversion'
+    #cmd2 = 'svn checkout https://github.com/hohouyj/database-setup-test/trunk/database_project'
+    cmd3 = "sh ~/database_project/setup.sh"
+    cmds = [cmd1,cmd3]
 
     try:
         client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
+
+        print("Setting up webserver on @ ip:{}".format(public_ip_address))
+
         for cmd in cmds:
             stdin, stdout, stderr = client.exec_command(cmd)
             print(stdout.read().decode())
@@ -224,62 +247,31 @@ def execute_commands_in_instance_server(
 
 if __name__ == "__main__":
 
-    # Testing specific instance
-    # instance = ec2_resource.Instance("id")
-    # print(instance[0].instance_id)
-    ############################
-
-    # security_group_name = input("Please enter the security group name:\n")
-    # key_name = input("Please enter the key name:\n")
-    # numofinstances = 3
-
-    # access_key_id = input("Access Key ID: ")
-    # aws_secret_access_key = input("AWS Secret Access: ")
-    # aws_session_token = input("AWS Session Token: ")
-
     github_username = input("Github username? ")
-    github_password = input("Github password? ")
+    
 
-    # session = boto3.session.Session(
-    #     aws_access_key_id="ASIAVMPMSHONPDFA2UDP",
-    #     aws_secret_access_key="SL9AUFi3h3GcZB8rBy1sCIyyBQTAAb5lYrlmAcR0",
-    #     aws_session_token="FwoGZXIvYXdzEKr//////////wEaDBLAqY+K4wMh+67G+iLNAQHUmQPpMxf0eVpD8+J0x/aRg0QupkRYiiWb2HudZhndZfzopJXMqoDhXT8SdDCqDYi/BqBVYex4/dCrBblMAoAsPutRU1vx6fZpF9/4/GJCQGMp8OqckIeM51YHXar2/XxN/UQXIRwIBRsYaoqCtzr3h4Z+TPZnGj6oxY1fdaFjlVLkmD/u4s0AU2n7RnK4tBzNwuXdHPccccjrOorkr5K2keL9NITkyfTysH5WyZc+/kjvxcEDgyxDjPRq+zsiPhHGlGKcdrWrbuz4aHYo/OfI/QUyLRrjPs5jpRBfHIJyYEFAt2rt1na3kFo/Ik1IEk5K+g0HwaMuq6g45EK2lsMCAg==",
-    #     region_name="us-east-1",
-    # )
-    session = boto3.session.Session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        aws_session_token=aws_session_token,
-        region_name=REGION_NAME,
-    )
+    github_password = getpass.getpass("Github password? ") 
     try:
-        ec2 = session.client("ec2")
-        ec2_resource = session.resource("ec2")
 
-        # instance = ec2_resource.Instance("id")
-        execute_commands_in_instance_server(
-            "3.86.240.232", "shinjie", github_username, github_password
-        )
+        instance = create_new_webserver_instance(SECURITY_GROUP_NAME, KEY_NAME, NUM_OF_INSTANCES)
 
-        # instance = create_new_webserver_instance(SECURITY_GROUP_NAME, KEY_NAME, NUM_OF_INSTANCES)
+        print("Sleeping the program for 60 seconds to let the instance to be configured..")
+        time.sleep(90)
 
-        # print("Sleeping the program for 60 seconds to let the instance to be configured..")
-        # time.sleep(90)
+        instance[0].reload()
+        execute_commands_in_instance_mysql(instance[0].public_ip_address, KEY_NAME)
+        print("sql setup done")
 
-        # instance[0].reload()
-        # execute_commands_in_instance_mysql(instance[0].public_ip_address, KEY_NAME)
-        # print("sql setup done")
+        instance[1].reload()
+        execute_commands_in_instance_mongodb(instance[1].public_ip_address, KEY_NAME)
+        print("mongodb setup done")
 
-        # instance[1].reload()
-        # execute_commands_in_instance_mongodb(instance[1].public_ip_address, KEY_NAME)
-        # print("mongodb setup done")
+        instance[2].reload()
+        print(instance[2].public_ip_address)
+        iplist = []
+        iplist = [instance[0].public_ip_address, instance[1].public_ip_address]
 
-        # instance[2].reload()
-        # print(instance[2].public_ip_address)
-        # iplist = []
-        # iplist = [instance[0].public_ip_address, instance[1].public_ip_address]
-
-        # execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME, iplist)
-        # print("server setup done, can view in:", instance[2].public_ip_address)
+        execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME ,github_username, github_password)#, iplist)
+        print("server setup done, can view in:", instance[2].public_ip_address)
     except Exception as error:
         print(error)
