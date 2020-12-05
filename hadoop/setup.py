@@ -290,7 +290,8 @@ if __name__ == "__main__":
         #then pass to webserver via scp
         iplist = {
             'mysql_ip' : instance[0].public_ip_address,
-            'mongodb_ip' : instance[1].public_ip_address
+            'mongodb_ip' : instance[1].public_ip_address,
+            'webserver_ip' : instance[2].public_ip_address
         }
         print('passing ips to webserver instance')
         with open('settings/ip_list.json','+w') as f:
