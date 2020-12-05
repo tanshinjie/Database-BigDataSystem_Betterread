@@ -76,8 +76,12 @@ def create_security_group(security_group_name, ec2):
         pp.pprint(e)
 
 
-def create_new_ec2_instance(ec2, ec2_resource, mode="p"):
-    config = load_config()
+def create_new_ec2_instance(
+    ec2,
+    ec2_resource,
+    config,
+    mode="p",
+):
     security_group_name = config["security_group_name"]
     key_name = config["key_name"]
     number_of_instances = 1
@@ -87,6 +91,10 @@ def create_new_ec2_instance(ec2, ec2_resource, mode="p"):
         number_of_instances = config["number_of_production_server"]
     elif mode == "a":
         number_of_instances = config["number_of_analytics_server"]
+        instance_type = config["analytics_server"]["instance_type"]
+        block_device_mappings = config["analytics_server"]["block_device_mappings"]
+    elif mode == "scale":
+        number_of_instances = config["scale_factor"]
         instance_type = config["analytics_server"]["instance_type"]
         block_device_mappings = config["analytics_server"]["block_device_mappings"]
 

@@ -14,10 +14,10 @@
 <name>dfs.datanode.data.dir</name>
 <value>file:/mnt/hadoop/datanode</value>
 </property>
-<!-- <property>
+<property>
 <name>dfs.hosts</name>
 <value>/home/hadoop/includes</value>
-</property> -->
+</property>
 <property>
 <name>dfs.hosts.exclude</name>
 <value>/home/hadoop/excludes</value>

@@ -8,12 +8,13 @@ import subprocess
 from util import *
 from script_generator import *
 import copy
+from datetime import datetime
 
 REGION_NAME = "us-east-1"
 
-aws_access_key_id = ""
-aws_secret_access_key = ""
-aws_session_token = ""
+aws_access_key_id = "ASIAVMPMSHONAAUCDCHN"
+aws_secret_access_key = "mEo8KGU/g2br/uxSVljweNVW01wyKA26aGsVeLYO"
+aws_session_token = "FwoGZXIvYXdzEG8aDNxGY/hdlEiQjjiihyLNAYkj5VUtHy7wwp/WWNqdIPgrDj9vTmhP8sOcz4umlISz3zY888CgpW57oI6B5qRqD5bBXOVDnwCINFqffmKXeBUUzCK/PYQeaOY2bMpviJmPSdsKgXT3SO/ouTDZfBfPlxvFSnR1+COoMVJd5I1dLpo/LnkWOpgF0NVup9/sQmKf4DhW+2T7WNldOIycQh9C+xjSR2idoYbWGUoEFEbeK1fnvCdg1i0LtLLScRDN92exw+gdSqRuwk8eURcfyG6AGZEd7nB+ulzGsXsoq+8oubWs/gUyLRq1vHnCULI4jlc2NJwv+UNdoIT7V0BOyl9wD1dW8SWgS3SwFlXhTBBEhQVYiQ=="
 
 
 if __name__ == "__main__":
@@ -31,14 +32,14 @@ if __name__ == "__main__":
     try:
         ec2 = session.client("ec2")
         ec2_resource = session.resource("ec2")
-        config = load_config()
+        config = load_config("./settings/config.json")
         key_file = "./settings/{}.pem".format(config["key_name"])
         cmds = []
 
         ##################################
         ### Step 1: Creating instances ###
         ##################################
-        instances = create_new_ec2_instance(ec2, ec2_resource, mode="a")
+        instances = create_new_ec2_instance(ec2, ec2_resource, config, mode="a")
         print("Waiting for EC2 to spin up new instances...")
         time.sleep(120)
 
@@ -77,6 +78,7 @@ if __name__ == "__main__":
         print("hosts_name", hosts_name)
 
         new_node_offset = node_offset + len(priv_ips)
+        print("node_offset", node_offset)
         print("new_node_offset", new_node_offset)
 
         ##################################
@@ -85,7 +87,7 @@ if __name__ == "__main__":
         # disable_strict_host(public_ips)
         generate_hosts(priv_ips, hosts_name)
         generate_distribute_hadoop(priv_ips[1:])
-        generate_disable_strict_host_ssh(priv_ips, hosts_name)
+        generate_disable_strict_host_ssh(hosts_name)
         generate_hadoop_config(hosts_name[1:])
 
         ##############################################
@@ -142,12 +144,13 @@ if __name__ == "__main__":
             print("================================================================")
             print("Executing: ", c)
             process = subprocess.run(c, shell=True)
-            # print(process.stdout)
+        print(process.stdout)
 
         ###################################
         ### Step 8: Save system details ###
         ###################################
         new_config = copy.deepcopy(config)
+        new_config["last_changed"] = str(datetime.now())
         new_config["namenode_public_ip"] = namenode_ip_address
         new_config["public_ips"] = public_ips
         new_config["private_ips"] = priv_ips
