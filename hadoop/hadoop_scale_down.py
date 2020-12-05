@@ -12,9 +12,9 @@ SECURITY_GROUP_NAME = "betterread_analytics"
 KEY_NAME = "betterread_analytics"
 NUM_OF_INSTANCES = 4
 
-aws_access_key_id = "ASIAVMPMSHONDN7267N3"
-aws_secret_access_key = "FH/eO0RIPz+WTx6iLUg/WUb9tUGsu8eS9ipCKFLx"
-aws_session_token = "FwoGZXIvYXdzEDQaDCOYtrqIigAK5mAFMiLNAbvlkEoL42KTBITCn9h8/Ozxfkwm72ecivCC91+UGVcFoNCDJuG6k/cjoDc9KcY6cqu/NA/Lj+jQzih4R7MEIO3+RUrgZRlLci8EVbKveIxvJ4xZHPxu81E9siV5OsqAC9ED/r6g5T8lCQwdP+ZwBPwubEXVWfD9/wR4lIoxxq5NgxC096fzlecU/h9WeF2c2WVdLEhehO34iziOc41kBKHBm7V1FvXpoN87+HRYWvY7Quqw9E8MFOChuTfgdleseIz4yAW51Hx3lBSC1mcor8af/gUyLT5wP9tIENFeU8WZ88WEgY4/Xarp6bdhp0Xnizi/CUEg2zdnSilzmKHWeCHghQ=="
+aws_access_key_id = "ASIAVMPMSHONAVBTTKNU"
+aws_secret_access_key = "hoW0HgULCXiZVTsUvJOLuoRIz9NUk90jbEI3fJp+"
+aws_session_token = "FwoGZXIvYXdzEGoaDL+HdmsZJ3MzyVsCJCLNAeaovTU9DoR7OiwkO5oqzo5QcDDysJ0cGD+IAr6mPftb4jOgl71tlGb0YnIgWDt7ZyGNTdvcNAAeUoU0KpXvR4ITyLe0M2UCnX4xcXTXJDtVjXl0AraHTT+8E3Dvo4SC/0SSBN2vxAR3KXLXeu9Mnr7CjKy88//cXfhvSHHc88pTDXARxyD9auUVbQTkHYs2uXObfuSgqa1fQKzTOwjG5oiLjBNKTeJdQ0mhjqDMBUmO3X/DSAGxZAcoozvVHC8nscYRLsDGnAZy82tlMOcou7Wr/gUyLTmAp6IrlHQEtI3F9MFSH3BAbkIDW39c4rlP24qywrxVCEjo9DpYXkcO2xc2AQ=="
 
 if __name__ == "__main__":
     session = boto3.session.Session(
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         ec2 = session.client("ec2")
         ec2_resource = session.resource("ec2")
 
-        config = load_config()
+        config = load_config("./settings/post_config.json")
 
         namenode_public_ip = config["namenode_public_ip"]
         key_file = "./settings/{}.pem".format(config["key_name"])
@@ -39,9 +39,10 @@ if __name__ == "__main__":
         with open("./tmp/excludes", "w+") as f:
             f.write("\n".join(list(config["excludes"])))
 
-        cmd1 = "scp -i {} ./tmp/excludes ./tmp/includes ubuntu@{}:~/".format(
-            key_file, namenode_public_ip
-        )
+        print("Decomissioning: ", list(config["excludes"]))
+        print("Comissioning: ", list(config["includes"]))
+
+        cmd1 = "scp -i {} -r ./tmp ubuntu@{}:~/".format(key_file, namenode_public_ip)
         cmd2 = "ssh -i {} ubuntu@{} 'bash ~/scripts/refresh_hdfs.sh'".format(
             key_file, namenode_public_ip
         )

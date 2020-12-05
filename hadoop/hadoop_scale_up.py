@@ -7,115 +7,18 @@ import time
 from botocore.exceptions import ClientError
 import subprocess
 import json
+import copy
 from util import *
-
+from script_generator import *
+from datetime import datetime
 
 REGION_NAME = "us-east-1"
-SECURITY_GROUP_NAME = "betterread_analytics"
-KEY_NAME = "betterread_analytics"
-NUM_OF_INSTANCES = 2
 
-aws_access_key_id = "ASIAVMPMSHONNJI3O756"
-aws_secret_access_key = "3P+JRJUM9IcaY8fp/5DimSmCWv2sbavCNjPYSF49"
-aws_session_token = "FwoGZXIvYXdzEC8aDHLxYKBeIoDVsgruJCLNAfMG4UpR8lAZJEAvrCcI198KOA/UG70HcScdxQLZm8xI9i60aCG8hTlxH7qMjZ6miOCX59CP1Mc3Uaa3rU/jHhdA3hVqgVVaowGCD0wvFh5dIH8Ik4mXCBDvTQYhMbonEmCoFP2ZiGXGtZejekaaiZWet03qRunpqasj8i2fiI0T6y7YLWLbE2lSk7pLshL9XXbllfoD9w+uvHShprEbP0Dfotf3TgQajO+jQrc56KbdG2eO9QK7+zlerv9BZbHzUDMH96z4y3Yd0PmaNSMozLKe/gUyLcsYR45BEgt/ReXyCcMhCMlrCp9dqq3/SQy4GLlag3oY5oPHDh8p7eP1aGqsWA=="
-
-
-def execute_commands_in_instance_server(config, public_ips, priv_ips):
-    # key_file = "./settings/{}.pem".format(config["key_name"])
-    namenode_public_ip = config["namenode_public_ip"]
-
-    key_file = "{}.pem".format("shinjie")
-    # cmd = "scp -i {} ubuntu@{}:/etc/hosts ./".format(key_file, namenode_public_ip)
-    # with open("hosts", "a") as f:
-    #     for i in range(len(priv_ips)):
-    #         f.write(
-    #             "{}\td{}\n".format(priv_ips[i], config["number_of_datanode"] + i + 1)
-    #         )
-    # cmds = []
-    for i in public_ips:
-        cmd1 = "scp -i {} hosts createHadoopUser.sh setup_hadoop_datanode.sh ubuntu@{}:~/".format(
-            key_file, i
-        )
-        subprocess.run(cmd1, shell=True)
-    #     cmd2 = (
-    #         "ssh ubuntu@{} -i {} ".format(i, key_file)
-    #         + 'bash createHadoopUser.sh;"'
-    #     )
-    #     cmd3 = 'ssh ubuntu@{nn_ip} -i {key} "sudo cat /home/hadoop/.ssh/id_rsa.pub" | ssh ubuntu@{dn_ip} -i {key} "sudo cat - | sudo tee -a /home/hadoop/.ssh/authorized_keys"'.format(
-    #         key=key_file, nn_ip=namenode_public_ip, dn_ip=i
-    #     )
-    #     cmds.append(cmd1)
-    #     cmds.append(cmd2)
-    #     cmds.append(cmd3)
-
-    sub_script = ""
-    for i in priv_ips:
-        sub_script += """
-sudo su -c 'echo {ip} >> /home/hadoop/includes' hadoop
-sudo su -c 'ssh hadoop@{ip} "bash /home/ubuntu/setup_hadoop_datanode.sh"' hadoop
-""".format(
-            ip=i
-        )
-
-    script = """
-echo Scaling up hadoop...
-
-{}
-
-#/opt/hadoop-3.3.0/bin/yarn rmadmin -refreshNodes
-#/opt/hadoop-3.3.0/bin/hdfs dfsadmin -refreshNodes
-#/opt/hadoop-3.3.0/bin/hdfs dfsadmin -report
-
-echo Done.""".format(
-        sub_script,
-    )
-
-    # with open("scale_up_hadoop.sh", "w") as f:
-    #     f.write(script)
-
-    # sub_script = ""
-    # for i in priv_ips:
-    #     sub_script += "sudo su -c 'scp /home/ubuntu/hadoop-3.3.0.tgz hadoop@{}:~/' hadoop\n".format(
-    #         i
-    #     )
-
-    #     with open("distribute_hadoop.sh", "w") as f:
-    #         script = """
-    # echo Distributing hadoop to datanode...
-    # {}
-    # echo Done.
-    # """.format(
-    #             sub_script
-    #         )
-    #         f.write(script)
-
-    with open("setup_new_ssh.sh", "w") as f:
-        for i in priv_ips:
-            cmd = """sudo su -c "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'" hadoop\n""".format(
-                i
-            )
-            f.write(cmd)
-
-    cmds = []
-    cmd1 = "scp -i {} hosts scale_up_hadoop.sh setup_new_ssh.sh distribute_hadoop.sh ubuntu@{}:~/".format(
-        key_file, namenode_public_ip
-    )
-
-    cmd2 = 'ssh ubuntu@{} -i {} "bash setup_new_ssh.sh; bash distribute_hadoop.sh ;bash scale_up_hadoop.sh"'.format(
-        namenode_public_ip, key_file
-    )
-    cmds.append(cmd1)
-    cmds.append(cmd2)
-
-    for cmd in cmds:
-        print("========================================")
-        print(cmd)
-        process = subprocess.run(cmd, shell=True)
-        print(process.stdout)
-
+aws_access_key_id = "ASIAVMPMSHONIWSVR5WO"
+aws_secret_access_key = "QOAs5avmnLPiok4+T54b41VuGvx1XVaPSqN1zom7"
+aws_session_token = "FwoGZXIvYXdzEG0aDK2QtEcdQtEblqWdLyLNAbkxobKLI0erwYNBddIbXvJZt+0NhhZ0rYV7EaO5BZbQfV3ar4opNuouay7Ejtc+NMi8HELTmv3zQgF8FyYpQS19mX4KDdIL4h/JFK9TooOvArdvWd3HvjX6t7ORBOjPbaZAIBHyQqh3FCA8MfInskozdkDcaRktPbb1Rl4SPCVpO6oMxQOmTCII3vsUamByxDe2HkR0tliPAxIzj80vAAf/zrgR36l+PTcB6BQ1NJiZPJxn5MbaKZd5+Qu1fRcqCl5IdV7AQV38SRPqFgMolPWr/gUyLaA4dtj71L2SK0CjnGmsSiMc619xaf/CJMzJwTcL3aHLS8L6OeJtbTNx9AeYNA=="
 
 if __name__ == "__main__":
-    number_of_instances = sys.argv[1]
 
     session = boto3.session.Session(
         aws_access_key_id=aws_access_key_id,
@@ -127,55 +30,167 @@ if __name__ == "__main__":
     try:
         ec2 = session.client("ec2")
         ec2_resource = session.resource("ec2")
+        config = load_config("./settings/post_config.json")
 
-        config = load_config()
+        namenode_ip_address = config["namenode_public_ip"]
+        key_file = "./settings/{}.pem".format(config["key_name"])
 
-        # instances = create_new_ec2_instance(
-        #     config["security_group_name"], config["key_name"], int(number_of_instances)
-        # )
+        cmds = []
 
-        # print("Waiting for EC2 to spin up new instances...")
-        # time.sleep(90)
+        public_ips = ["54.172.191.191"]
+        priv_ips = ["172.31.92.80"]
 
-        # priv_ips = []
+        #################################
+        ## Step 1: Creating instances ###
+        #################################
+        instances = create_new_ec2_instance(ec2, ec2_resource, config, mode="scale")
+        print("Waiting for EC2 to spin up new instances...")
+        time.sleep(120)
 
-        # for i in instances:
-        #     priv_ips.append(i.private_ip_address)
+        priv_ips = []
+        for i in instances:
+            priv_ips.append(i.private_ip_address)
 
-        # public_ips = []
+        public_ips = []
+        ctr = 0
+        while len(public_ips) != len(priv_ips) and ctr < 20:
+            public_ips = []
+            print("Loading...")
+            for i in instances:
+                i.reload()
+                time.sleep(10)
+            for i in instances:
+                if i.public_ip_address == None:
+                    ctr += 1
+                public_ips.append(i.public_ip_address)
+        if ctr == 20:
+            sys.exit("EC2 launches unsuccessful. Try again later. ")
 
-        # while len(public_ips) != len(priv_ips):
-        #     public_ips = []
-        #     print("loading...")
-        #     time.sleep(10)
-        #     for i in instances:
-        #         i.reload()
-        #     for i in instances:
-        #         public_ips.append(i.public_ip_address)
+        ##################################
+        ### Step 2: Creating hostnames ###
+        ##################################
+        print("public_ips", public_ips)
+        print("priv_ips", priv_ips)
+        print("namenode_ip_address", namenode_ip_address)
+
+        node_offset = config["node_offset"]
+        hosts_name = ""
+        for i in range(len(priv_ips)):
+            hosts_name += "d{},".format(node_offset + i)
+        hosts_name = hosts_name.replace("d0", "n1").split(",")[: len(priv_ips)]
+
+        print("hosts_name", hosts_name)
+
+        new_node_offset = node_offset + len(priv_ips)
+        print("node_offset", node_offset)
+        print("new_node_offset", new_node_offset)
+
+        all_public_ips = config["public_ips"] + public_ips
+        all_priv_ips = config["private_ips"] + priv_ips
+        all_hosts_name = config["hosts_name"] + hosts_name
 
         # print(priv_ips)
-        # print(public_ips)
+        # print(hosts_name)
+        ###########################################
+        ### Step 3: Generating Scaling Scripts ####
+        ###########################################
+        # disable_strict_host(public_ips)
+        generate_hosts(all_priv_ips, all_hosts_name)
+        generate_distribute_hadoop(priv_ips)
+        generate_disable_strict_host_ssh(hosts_name)
+        generate_append_workers(hosts_name)
 
-        # for i in public_ips:
-        #     process = subprocess.run(
-        #         "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'".format(i),
-        #         shell=True,
-        #     )
-        # process = subprocess.run(
-        #     "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'".format(
-        #         config["namenode_public_ip"]
-        #     ),
-        #     shell=True,
-        # )
+        ##############################################
+        ### Step 4: Copy resources & Configure SSH ###
+        ##############################################
+        """ Step 4: Copy resources over & Configure SSH """
+        cmd = "scp -i {} -r ./tmp ./scripts ubuntu@{}:~/".format(
+            key_file, namenode_ip_address
+        )
+        cmds.append(cmd)
+        cmd = "ssh -i {} ubuntu@{} 'sudo mv ~/tmp/hosts /etc/hosts'".format(
+            key_file, namenode_ip_address
+        )
+        cmds.append(cmd)
+        for i in public_ips:
+            cmd1 = "scp -i {} -r ./tmp ./scripts ubuntu@{}:~/".format(key_file, i)
+            cmd2 = "ssh -i {} ubuntu@{} 'bash ~/scripts/create_hadoop_user.sh'".format(
+                key_file, i
+            )
+            cmds.append(cmd1)
+            cmds.append(cmd2)
 
-        # instances = create_new_ec2_instance(
-        #     "launch-wizard-4", "myFirstKey", int(number_of_instances)
-        # )
+        for i in range(0, len(public_ips)):
+            cmd = 'ssh ubuntu@{nn_ip} -i {key} "sudo cat /home/hadoop/.ssh/id_rsa.pub" | ssh ubuntu@{dn_ip} -i {key} "sudo cat - | sudo tee -a /home/hadoop/.ssh/authorized_keys"'.format(
+                key=key_file, nn_ip=namenode_ip_address, dn_ip=public_ips[i]
+            )
+            cmds.append(cmd)
 
-        priv_ips = ["172.31.92.44", "172.31.80.173"]
-        public_ips = ["3.82.146.70", "52.90.77.154"]
+        ##############################################
+        ### Step 5: Append new workers on namende ###
+        ##############################################
+        cmd = "ssh -i {} ubuntu@{} 'bash ~/scripts/append_workers.sh'".format(
+            key_file, namenode_ip_address
+        )
+        cmds.append(cmd)
 
-        execute_commands_in_instance_server(config, public_ips, priv_ips)
+        #################################################
+        ### Step 6: Distribute hadoop to new datanode ###
+        #################################################
+        cmd = "ssh -i {} ubuntu@{} 'sudo su -c \"bash /home/ubuntu/scripts/disable_strict_host_ssh.sh\" hadoop'".format(
+            key_file, namenode_ip_address
+        )
+        cmds.append(cmd)
+        cmd = "ssh -i {} ubuntu@{} 'bash ~/scripts/distribute_hadoop.sh'".format(
+            key_file, namenode_ip_address
+        )
+        cmds.append(cmd)
+
+        ##############################
+        ### Step 7: Setup datanode ###
+        ##############################
+        for i in public_ips:
+            cmd = (
+                "ssh -i {} ubuntu@{} 'bash ~/scripts/setup_hadoop_datanode.sh'".format(
+                    key_file, i
+                )
+            )
+            cmds.append(cmd)
+
+        ################################
+        ### Step 8: Restart namenode ###
+        ################################
+        cmd = "ssh -i {} ubuntu@{} 'bash ~/scripts/restart_namenode.sh'".format(
+            key_file, namenode_ip_address
+        )
+        cmds.append(cmd)
+
+        for c in cmds:
+            print("================================================================")
+            print("Executing: ", c)
+            process = subprocess.run(c, shell=True)
+            # print(process.stdout)
+
+        ##################################
+        ## Step 9: Save system details ###
+        ##################################
+        new_config = copy.deepcopy(config)
+        new_config["last_changed"] = str(datetime.now())
+        new_config["namenode_public_ip"] = namenode_ip_address
+        new_config["public_ips"] = all_public_ips
+        new_config["private_ips"] = all_priv_ips
+        new_config["node_offset"] = new_node_offset
+        new_config["hosts_name"] = all_hosts_name
+        host_ip_map = {}
+        for i in range(len(priv_ips)):
+            host_ip_map[hosts_name[i]] = priv_ips[i]
+        new_config["host_ip_map"].update(host_ip_map)
+
+        print(json.dumps(new_config))
+        with open(
+            "./settings/config_{}.json".format(datetime.now().strftime("%s")), "w"
+        ) as f:
+            f.write(json.dumps(new_config))
 
     except Exception as error:
         print(error)

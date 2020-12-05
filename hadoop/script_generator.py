@@ -6,13 +6,28 @@ def generate_hosts(priv_ips, hosts_name):
         f.write(hosts)
 
 
-def generate_disable_strict_host_ssh(priv_ips, hosts_name):
+def generate_disable_strict_host_ssh(hosts_name):
+    sub_script = ""
+    print(hosts_name)
+    for i in hosts_name:
+        sub_script += """sudo su -c "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'" hadoop\n""".format(
+            i
+        )
+    script = """
+#! /bin/bash
+# this script is generated
+
+echo Disabling StrictHostKeyChecking...
+
+{}
+
+echo Done.
+""".format(
+        sub_script
+    )
+
     with open("./scripts/disable_strict_host_ssh.sh", "w+") as f:
-        for i in hosts_name:
-            cmd = """sudo su -c "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'" hadoop\n""".format(
-                i
-            )
-            f.write(cmd)
+        f.write(script)
 
 
 def generate_distribute_hadoop(priv_ips):
@@ -21,27 +36,60 @@ def generate_distribute_hadoop(priv_ips):
         sub_script += (
             "sudo su -c 'scp ~/hadoop-3.3.0.tgz hadoop@{}:~/' hadoop\n".format(i)
         )
-    with open("./scripts/distribute_hadoop.sh", "w+") as f:
-        script = """#! /bin/bash\necho Distributing hadoop to datanode...\n\n{}echo Done.
-            """.format(
-            sub_script
-        )
 
+    script = """
+#! /bin/bash
+# this script is generated
+
+echo Distributing hadoop to datanode...
+
+{}
+
+echo Done.
+""".format(
+        sub_script
+    )
+
+    with open("./scripts/distribute_hadoop.sh", "w+") as f:
+        f.write(script)
+
+
+def generate_append_workers(hosts_name):
+    sub_script = ""
+    for i in hosts_name:
+        sub_script += "sudo su -c 'echo {} >> /opt/hadoop-3.3.0/etc/hadoop/workers' hadoop\n".format(
+            i
+        )
+    script = """
+#! /bin/bash
+# this script is generated
+
+echo Appending new datanode to workers...
+
+{}
+
+echo Done.
+""".format(
+        sub_script
+    )
+
+    with open("./scripts/append_workers.sh", "w+") as f:
         f.write(script)
 
 
 def generate_hadoop_config(hosts_name):
-    sub_scripts = ""
+    sub_script = ""
     for i in hosts_name:
-        sub_scripts += (
+        sub_script += (
             "sudo su -c 'echo {} >> ~/hadoop-3.3.0/etc/hadoop/workers' hadoop\n".format(
                 i
             )
         )
     script = """
 #! /bin/bash
+# this script is generated
 
-echo "Adding configuration..."
+echo Adding configuration...
 
 sudo su -c 'cat ./tmp/core-site.xml > ~/hadoop-3.3.0/etc/hadoop/core-site.xml' hadoop
 sudo su -c 'cat ./tmp/hdfs-site.xml > ~/hadoop-3.3.0/etc/hadoop/hdfs-site.xml' hadoop
@@ -53,7 +101,7 @@ sudo su -c "rm ~/hadoop-3.3.0/etc/hadoop/workers" hadoop
 
 echo Done.
 """.format(
-        sub_scripts
+        sub_script
     )
 
     with open("./scripts/setup_hadoop_config.sh", "w+") as f:

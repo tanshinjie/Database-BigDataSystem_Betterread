@@ -20,10 +20,10 @@ that they need to implement</description>
 <name>yarn.resourcemanager.hostname</name>
 <value>n1</value>
 </property>
-<!-- <property>
+<property>
 <name>yarn.resourcemanager.node.include-path</name>
 <value>/home/hadoop/includes</value>
-</property> -->
+</property>
 <property>
 <name>yarn.resourcemanager.node.exclude-path</name>
 <value>/home/hadoop/excludes</value>
