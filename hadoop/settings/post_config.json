@@ -1,11 +1,15 @@
 {
+    "last_changed": "2020-12-05 14:05:44.075425",
     "region_name": "us-east-1",
     "security_group_name": "betterread-test",
     "key_name": "betterread-test",
-    "namenode_public_ip": "54.221.16.163",
-    "excludes": [],
+    "namenode_public_ip": "54.86.254.117",
+    "excludes": [
+        "d2",
+        "d3"
+    ],
     "includes": [],
-    "node_offset": 3,
+    "node_offset": 4,
     "number_of_production_server": 3,
     "number_of_analytics_server": 3,
     "production_server": {
@@ -28,23 +32,27 @@
     },
     "scale_factor": 1,
     "public_ips": [
-        "54.221.16.163",
-        "34.229.156.238",
-        "107.20.11.224"
+        "54.86.254.117",
+        "3.89.180.50",
+        "54.227.24.15",
+        "3.89.56.0"
     ],
     "private_ips": [
-        "172.31.17.30",
-        "172.31.22.65",
-        "172.31.23.91"
+        "172.31.19.59",
+        "172.31.19.126",
+        "172.31.29.68",
+        "172.31.31.184"
     ],
     "hosts_name": [
         "n1",
         "d1",
-        "d2"
+        "d2",
+        "d3"
     ],
     "host_ip_map": {
-        "n1": "172.31.17.30",
-        "d1": "172.31.22.65",
-        "d2": "172.31.23.91"
+        "n1": "172.31.19.59",
+        "d1": "172.31.19.126",
+        "d2": "172.31.29.68",
+        "d3": "172.31.31.184"
     }
 }

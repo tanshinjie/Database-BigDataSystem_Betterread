@@ -161,9 +161,7 @@ if __name__ == "__main__":
             host_ip_map[hosts_name[i]] = priv_ips[i]
         new_config["host_ip_map"] = host_ip_map
 
-        with open(
-            "./settings/config_{}.json".format(str(datetime.now().strftime("%s"))), "w"
-        ) as f:
+        with open("./settings/post_config.json", "w") as f:
             f.write(json.dumps(new_config))
 
     except Exception as error:
