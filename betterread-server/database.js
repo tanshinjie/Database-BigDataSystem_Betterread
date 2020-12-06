@@ -1,36 +1,37 @@
+const fs = require("fs");
+const path = require("path");
 const mysql = require("mysql");
 const { MongoClient } = require("mongodb");
-const uri =
-  "mongodb://root:12345@ec2-3-238-114-70.compute-1.amazonaws.com:27017";
-const mongoClient = new MongoClient(uri, { useUnifiedTopology: true });
 
-const connectToMongo = async () => {
-  try {
-    await mongoClient.connect();
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error(error);
-  }
-};
+ip_list = JSON.parse(fs.readFileSync(path.resolve("ip_list.json"), "utf-8"));
 
+const URI = `mongodb://admin:password@${ip_list.mongodb_ip}:27017`;
 const mysqlClient = mysql.createConnection({
-  host: "54.166.186.251",
-  port: 3340,
-  user: "shinjie",
-  password: "shinjie",
+  host: `${ip_list.mysql_ip}`,
+  port: 3306,
+  user: "admin",
+  password: "password",
   database: "kindle_reviews",
 });
+// const mysqlClient = mysql.createConnection({
+//   host: `${ip_list.mysql_ip}`,
+//   port: 3340,
+//   user: "shinjie",
+//   password: "shinjie",
+//   database: "kindle_reviews",
+// });
+const mongoClient = new MongoClient(URI, { useUnifiedTopology: true });
 
-const connectToMySQL = async () => {
-  try {
-    await mysqlClient.connect();
-    console.log("Connected to MySQL");
-  } catch (error) {
-    console.error(error);
-  }
-};
+mysqlClient.connect((err) => {
+  if (err) return console.log(err);
+  console.log("Connecting to MySQL...");
+});
+try {
+  mongoClient.connect();
+  console.log("Connecting to Mongo...");
+} catch (error) {
+  console.log(error);
+}
 
-connectToMongo();
-connectToMySQL();
-module.exports.mongoClient = mongoClient;
 module.exports.mysqlClient = mysqlClient;
+module.exports.mongoClient = mongoClient;

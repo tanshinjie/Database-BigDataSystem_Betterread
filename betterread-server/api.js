@@ -2,27 +2,13 @@ const express = require("express");
 const router = express.Router();
 const { mongoClient, mysqlClient } = require("./database");
 
-router.all("*", async (req, res, next) => {
-  try {
-    const collection = mongoClient.db("dblogs").collection("logsRecord");
-    const result = {
-      timeStamp: Date.now(),
-      reqType: req.method,
-      resCode: 200,
-    };
-    await collection.insertOne(result);
-    next();
-  } catch (error) {
-    return res.status(500).send(error);
-  }
-});
+COUNT_LIMIT = 3000;
 
 router.get("/", (req, res) => {
+  console.log("GET /");
   let filterParams = req.query.data;
   filterParams = filterParams ? JSON.parse(filterParams) : {};
   const { search, categories, ratings } = filterParams;
-  console.log(search, categories, ratings);
-
   const ratingQuery = getRatings(ratings);
   const dbMeta = mongoClient.db("dbMeta");
 
@@ -68,9 +54,9 @@ router.get("/", (req, res) => {
   if (ratingQuery === "") {
     try {
       dbMeta
-        .collection("title_author")
+        .collection("kindle_metadata")
         .aggregate(pipeline)
-        .limit(3000)
+        .limit(COUNT_LIMIT)
         .toArray((err, titleAuthorDocs) => {
           if (err) throw err;
           let asinArr = titleAuthorDocs.map((doc) => doc["asin"]);
@@ -86,10 +72,14 @@ router.get("/", (req, res) => {
               );
               return { ...found[0], ...res };
             });
-            res.status(200).send(data);
+            req.resCode = 200;
+            LOG(req);
+            return res.status(200).send(data);
           });
         });
     } catch (error) {
+      req.resCode = 404;
+      LOG(req);
       return res.status(404).send(error);
     }
   } else {
@@ -97,7 +87,7 @@ router.get("/", (req, res) => {
     mysqlClient.query(query, (err, result) => {
       if (err) return res.status(404).send(err);
       let asinArr = result.map((res) => res["asin"]);
-      asinArr = asinArr.slice(0, 10000);
+      asinArr = asinArr.slice(0, COUNT_LIMIT);
       if (search === "") {
         pipeline.unshift({
           $match: {
@@ -116,30 +106,41 @@ router.get("/", (req, res) => {
         });
       }
       dbMeta
-        .collection("title_author")
+        .collection("kindle_metadata")
         .aggregate(pipeline)
         .toArray((err, titleAuthorDocs) => {
-          if (err) return res.status(404).send(err);
+          if (err) {
+            req.resCode = 404;
+            LOG(req);
+            return res.status(404).send(err);
+          }
           const data = titleAuthorDocs.map((doc) => {
             let found = result.filter((res) => res["asin"] === doc["asin"]);
             return { ...found[0], ...doc };
           });
+          req.resCode = 200;
+          LOG(req);
           return res.status(200).send(data);
         });
     });
   }
 });
 
-router.get("/review/:asin", (req, res) => {
-  const asinNumber = req.params.asin;
+router.get("/review", (req, res) => {
+  console.log("GET /review");
+  const asin = req.query.asin;
   mysqlClient.query(
     'SELECT reviewerName,reviewText,summary,overall,unixReviewTime FROM reviews WHERE asin = "' +
-      asinNumber +
+      asin +
       '" ',
     (err, results) => {
       if (err) {
+        req.resCode = 500;
+        LOG(req);
         return res.status(500).send(err);
       } else {
+        req.resCode = 200;
+        LOG(req);
         return res.json({
           reviews: results,
         });
@@ -148,36 +149,99 @@ router.get("/review/:asin", (req, res) => {
   );
 });
 
+router.get("/book", async (req, res) => {
+  console.log("GET /book");
+  const { asin, brief } = req.query;
+  const coll = mongoClient.db("dbMeta").collection("kindle_metadata");
+  if (brief) {
+    coll
+      .find({ asin: asin })
+      .project({ asin: 1, title: 1, author: 1, imUrl: 1, categories: 1 })
+      .toArray((err, docs) => {
+        const doc_ = docs[0];
+        const query = `SELECT asin, count(*) as numberOfReview, avg(overall) as overall from reviews where asin='${asin}' group by asin;`;
+        mysqlClient.query(query, (err, results) => {
+          if (results.length > 0) {
+            doc_["numberOfReview"] = 0;
+            doc_["overall"] = 0;
+            req.resCode = 200;
+            LOG(req);
+            return res.status(200).send(doc_);
+          } else {
+            doc_["numberOfReview"] = results[0].numberOfReview;
+            doc_["overall"] = results[0].overall;
+            req.resCode = 200;
+            LOG(req);
+            return res.status(200).send(doc_);
+          }
+        });
+      });
+  } else {
+    coll.find({ asin: asin }).toArray((err, docs) => {
+      const doc_ = docs[0];
+      const ab = doc_.related.also_bought;
+      const bav = doc_.related.buy_after_viewing;
+      coll
+        .find({ asin: { $in: ab } })
+        .project({ asin: 1, title: 1, imUrl: 1 })
+        .toArray((err, result) => {
+          doc_.related.also_bought = result;
+          coll
+            .find({ asin: { $in: bav } })
+            .project({ asin: 1, title: 1, imUrl: 1 })
+            .toArray((err, result) => {
+              doc_.related.buy_after_viewing = result;
+              const query = `SELECT asin, count(*) as numberOfReview, avg(overall) as overall from reviews where asin='${asin}' group by asin;`;
+              mysqlClient.query(query, (err, results) => {
+                if (results.length > 0) {
+                  doc_["numberOfReview"] = results[0].numberOfReview;
+                  doc_["overall"] = results[0].numberOfReview;
+                  return res.status(200).send(doc_);
+                } else {
+                  doc_["numberOfReview"] = 0;
+                  doc_["overall"] = 0;
+                  return res.status(200).send(doc_);
+                }
+              });
+            });
+        });
+    });
+  }
+});
+
 router.post("/book", async (req, res) => {
+  console.log("POST /book");
   try {
     const { author, title, description } = req.body;
-    const collection = mongoClient.db("dbMeta").collection("title_author");
+    const collection = mongoClient.db("dbMeta").collection("kindle_metadata");
     collection.insertOne({ author, title, description }).then((result) => {
+      req.resCode = 201;
+      LOG(req);
       return res.status(201).send({ messages: "Added book to MongoDB" });
     });
   } catch (error) {
+    req.resCode = 500;
+    LOG(req);
     return res.status(500).send(error);
   }
 });
 
 router.post("/review", (req, res) => {
+  console.log("POST /book");
   const { summary, review, asin, overall, name } = req.body;
   const timestamp = Date.now();
-  console.log(
-    "Inserting review: " + summary,
-    review,
-    asin,
-    overall,
-    name,
-    timestamp
-  );
   const query =
     "INSERT INTO reviews (asin, reviewerName, reviewText, summary, overall, reviewTime) VALUES ?";
   const values = [[asin, name, review, summary, overall, timestamp]];
   mysqlClient.query(query, [values], function (err, result) {
-    if (err) throw res.status(500).send({ messages: "Fail to add review" });
-    console.log("Number of records inserted: " + result.affectedRows);
-    res.status(201).send({ messages: "New review added to MySQL!" });
+    if (err) {
+      req.resCode = 500;
+      LOG(req);
+      return res.status(500).send({ messages: "Fail to add review" });
+    }
+    req.resCode = 201;
+    LOG(req);
+    return res.status(201).send({ messages: "New review added to MySQL!" });
   });
 });
 
@@ -192,4 +256,22 @@ function getRatings(ratings) {
     }
   }
   return ratingsStr;
+}
+
+async function LOG(req) {
+  console.log("LOG");
+  try {
+    const collection = mongoClient.db("dblogs").collection("logsRecord");
+    const result = {
+      timeStamp: Date.now(),
+      reqType: req.method,
+      resCode: req.resCode,
+      path: req.path,
+      url: req.url,
+    };
+    console.log(result);
+    await collection.insertOne(result);
+  } catch (error) {
+    console.log(error);
+  }
 }

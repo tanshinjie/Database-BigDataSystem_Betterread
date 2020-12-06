@@ -6,6 +6,7 @@ import AddBook from "./Pages/AddBook";
 import Review from "./Pages/Review";
 import AddReview from "./Pages/AddReview";
 import NoMatch from "./Pages/NoMatch";
+import Footer from "./Components/Footer";
 import "./App.css";
 
 function App() {
@@ -16,23 +17,20 @@ function App() {
         <Route exact path="/">
           <Home />
         </Route>
-
         <Route path="/newbook">
           <AddBook />
         </Route>
-
         <Route path="/newreview">
           <AddReview />
         </Route>
-
         <Route path="/review">
           <Review />
         </Route>
-
         <Route path="*">
           <NoMatch />
         </Route>
       </Switch>
+      <Footer />
     </Router>
   );
 }

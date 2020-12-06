@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
@@ -59,8 +59,8 @@ const useStyles = makeStyles({
 
 const AddReview = () => {
   const location = useLocation();
-  const { title, author, imUrl, asin } = location.state;
-  console.log(location.state);
+  const [bookDetail, setBookDetail] = useState(null);
+  const asin = location.pathname.split("/").pop();
   const classes = useStyles();
   const [name, setName] = useState("Anonymous");
   const [color] = useState(randomColor());
@@ -71,6 +71,19 @@ const AddReview = () => {
   const [openSB, setOpenSB] = useState(false);
   const [SBmessage, setSBmessage] = useState("");
   const [SBseverity, setSBseverity] = useState("");
+
+  useEffect(() => {
+    if (!bookDetail) {
+      axios
+        .get(
+          `http://${window.location.hostname}:5000/api/book?asin=${asin}&brief=true`
+        )
+        .then((res) => {
+          console.log(res.data);
+          setBookDetail(res.data);
+        });
+    }
+  }, [asin, bookDetail]);
   const handleCloseBD = () => {
     setOpenBD(false);
   };
@@ -142,111 +155,117 @@ const AddReview = () => {
   return (
     <Container>
       <Paper className={classes.paper}>
-        <Box className={classes.left}>
-          <Typography
-            variant="h3"
-            style={{
-              fontFamily: "Grand Hotel, cursive",
-              color: "#7D1616",
-              marginBottom: "20px",
-            }}
-          >
-            What do you think about the book
-          </Typography>
-          <Typography variant="h4" style={{ marginBottom: "10px" }}>
-            {title}
-          </Typography>
-          <Typography variant="h5" style={{ marginBottom: "10px" }}>
-            by {author}
-          </Typography>
-          <img
-            src={imUrl}
-            alt="book cover"
-            style={{
-              width: "250px",
-              height: "350px",
-              backgroundColor: "#eee",
-              objectFit: "cover",
-              display: "inline-block",
-            }}
-          />
-        </Box>
-        <Box className={classes.right}>
-          <Paper elevation={4} className={classes.reviewForm}>
-            <Box
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-around",
-                marginBottom: "40px",
-              }}
-            >
-              <Avatar
-                component="span"
+        {bookDetail ? (
+          <>
+            <Box className={classes.left}>
+              <Typography
+                variant="h3"
                 style={{
-                  width: "100px",
-                  height: "100px",
-                  backgroundColor: color,
+                  fontFamily: "Grand Hotel, cursive",
+                  color: "#7D1616",
+                  marginBottom: "20px",
                 }}
               >
-                {name ? name[0] + name[name.indexOf(" ") + 1] : "-"}
-              </Avatar>
-              <Box style={{ marginLeft: "10px", flexGrow: 1 }}>
+                What do you think about the book
+              </Typography>
+              <Typography variant="h4" style={{ marginBottom: "10px" }}>
+                {bookDetail.title}
+              </Typography>
+              <Typography variant="h5" style={{ marginBottom: "10px" }}>
+                by {bookDetail.author}
+              </Typography>
+              <img
+                src={bookDetail.imUrl}
+                alt="book cover"
+                style={{
+                  width: "250px",
+                  height: "350px",
+                  backgroundColor: "#eee",
+                  objectFit: "cover",
+                  display: "inline-block",
+                }}
+              />
+            </Box>
+            <Box className={classes.right}>
+              <Paper elevation={4} className={classes.reviewForm}>
+                <Box
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-around",
+                    marginBottom: "40px",
+                  }}
+                >
+                  <Avatar
+                    component="span"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      backgroundColor: color,
+                    }}
+                  >
+                    {name ? name[0] + name[name.indexOf(" ") + 1] : "-"}
+                  </Avatar>
+                  <Box style={{ marginLeft: "10px", flexGrow: 1 }}>
+                    <TextField
+                      variant="outlined"
+                      style={{ width: "75%" }}
+                      value={name}
+                      onChange={handleNameChange}
+                    />
+                    <Button
+                      variant="contained"
+                      style={{ height: "100%", padding: "15px" }}
+                      onClick={generateRandomName}
+                    >
+                      Generate
+                    </Button>
+                  </Box>
+                </Box>
+                <Typography>Ratings</Typography>
+                <ReactStars
+                  count={5}
+                  onChange={handleRatingChange}
+                  activeColor="#ffd700"
+                  size={50}
+                  value={overall}
+                />
+                <Typography>Summary</Typography>
                 <TextField
                   variant="outlined"
-                  style={{ width: "75%" }}
-                  value={name}
-                  onChange={handleNameChange}
+                  style={{ width: "100%", marginBottom: "30px" }}
+                  value={summary}
+                  onChange={handleSummary}
+                />
+                <Typography>Review</Typography>
+                <TextareaAutosize
+                  rowsMin={3}
+                  rowsMax={15}
+                  style={{
+                    resize: "none",
+                    width: "100%",
+                    marginBottom: "50px",
+                    padding: "15px",
+                    outlineColor: "blue",
+                    fontFamily: "Roboto",
+                  }}
+                  value={review}
+                  onChange={handleReview}
                 />
                 <Button
+                  color="primary"
                   variant="contained"
-                  style={{ height: "100%", padding: "15px" }}
-                  onClick={generateRandomName}
+                  className={classes.button}
+                  onClick={addReview}
                 >
-                  Generate
+                  Add reivew
                 </Button>
-              </Box>
+              </Paper>
             </Box>
-            <Typography>Ratings</Typography>
-            <ReactStars
-              count={5}
-              onChange={handleRatingChange}
-              activeColor="#ffd700"
-              size={50}
-              value={overall}
-            />
-            <Typography>Summary</Typography>
-            <TextField
-              variant="outlined"
-              style={{ width: "100%", marginBottom: "30px" }}
-              value={summary}
-              onChange={handleSummary}
-            />
-            <Typography>Review</Typography>
-            <TextareaAutosize
-              rowsMin={3}
-              rowsMax={15}
-              style={{
-                resize: "none",
-                width: "100%",
-                marginBottom: "50px",
-                padding: "15px",
-                outlineColor: "blue",
-                fontFamily: "Roboto",
-              }}
-              value={review}
-              onChange={handleReview}
-            />
-            <Button
-              color="primary"
-              variant="contained"
-              className={classes.button}
-              onClick={addReview}
-            >
-              Add reivew
-            </Button>
-          </Paper>
-        </Box>
+          </>
+        ) : (
+          <h1>Loading...</h1>
+        )}
       </Paper>
       <Backdrop
         className={classes.backdrop}
