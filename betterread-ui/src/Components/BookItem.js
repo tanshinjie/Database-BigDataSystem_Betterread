@@ -8,6 +8,7 @@ import Container from "@material-ui/core/Container";
 import ReactStars from "react-rating-stars-component";
 import Divider from "@material-ui/core/Divider";
 import { useHistory } from "react-router-dom";
+import Category from "./Category";
 
 const useStyles = makeStyles({
   root: {
@@ -35,13 +36,7 @@ const useStyles = makeStyles({
     objectFit: "cover",
   },
   categoryList: {
-    display: "flex",
     justifyContent: "space-around",
-  },
-  categoryItem: {
-    "&:hover": {
-      textDecoration: "underline",
-    },
   },
 });
 
@@ -128,14 +123,11 @@ const BookItem = (props) => {
                 <Container
                   style={{
                     width: "100%",
-                    overflowY: "scroll",
                   }}
                 >
                   <div className={classes.categoryList}>
                     {categories.map((c) => (
-                      <span key={c} className={classes.categoryItem}>
-                        {c}
-                      </span>
+                      <Category category={c} />
                     ))}
                   </div>
                 </Container>

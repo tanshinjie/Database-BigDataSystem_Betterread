@@ -1,13 +1,9 @@
 import React from "react";
-import Badge from "react-bootstrap/Badge";
+import Chip from "@material-ui/core/Chip";
 
 const Category = (props) => {
   const { category } = props;
-  return (
-    <Badge pill variant="light">
-      {category}
-    </Badge>
-  );
+  return <Chip label={category} />;
 };
 
 export default Category;
