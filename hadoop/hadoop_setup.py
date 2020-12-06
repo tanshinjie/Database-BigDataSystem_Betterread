@@ -9,13 +9,26 @@ from util import *
 from script_generator import *
 import copy
 from datetime import datetime
+import json
+
 
 REGION_NAME = "us-east-1"
 
-aws_access_key_id = "ASIAVMPMSHONAAUCDCHN"
-aws_secret_access_key = "mEo8KGU/g2br/uxSVljweNVW01wyKA26aGsVeLYO"
-aws_session_token = "FwoGZXIvYXdzEG8aDNxGY/hdlEiQjjiihyLNAYkj5VUtHy7wwp/WWNqdIPgrDj9vTmhP8sOcz4umlISz3zY888CgpW57oI6B5qRqD5bBXOVDnwCINFqffmKXeBUUzCK/PYQeaOY2bMpviJmPSdsKgXT3SO/ouTDZfBfPlxvFSnR1+COoMVJd5I1dLpo/LnkWOpgF0NVup9/sQmKf4DhW+2T7WNldOIycQh9C+xjSR2idoYbWGUoEFEbeK1fnvCdg1i0LtLLScRDN92exw+gdSqRuwk8eURcfyG6AGZEd7nB+ulzGsXsoq+8oubWs/gUyLRq1vHnCULI4jlc2NJwv+UNdoIT7V0BOyl9wD1dW8SWgS3SwFlXhTBBEhQVYiQ=="
+with open('aws_token.txt','r') as f:
+    tokens = []
+    for i in f.readlines():
+        print(r'{}'.format(i))
+        if i[0:17] == 'aws_access_key_id':
+            tokens.append(i[18:-1])
+        elif i[0:21] == 'aws_secret_access_key':
+            tokens.append(i[22:-1])
+        elif i[0:17] == 'aws_session_token':
+            tokens.append(i[18:])
+    print(tokens)
 
+aws_access_key_id = tokens[0]
+aws_secret_access_key = tokens[1]
+aws_session_token = tokens[2]
 
 if __name__ == "__main__":
     # access_key_id = input("Access Key ID: ")
@@ -84,7 +97,7 @@ if __name__ == "__main__":
         ##################################
         ### Step 3: Generating Scripts ###
         ##################################
-        # disable_strict_host(public_ips)
+        disable_strict_host(public_ips)
         generate_hosts(priv_ips, hosts_name)
         generate_distribute_hadoop(priv_ips[1:])
         generate_disable_strict_host_ssh(hosts_name)
@@ -137,7 +150,16 @@ if __name__ == "__main__":
         ##############################
         cmd = "ssh -i {} ubuntu@{} 'bash ~/scripts/start_namenode.sh'".format(
             key_file, namenode_ip_address
-        )
+            )
+        cmds.append(cmd)
+
+        #############################
+        ### Step 7.1: Setup Spark ###
+        #############################
+        cmd = """ssh -i {} ubuntu@{} 'sudo su -c 'sh home/scripts/spark_setup_all.sh' hadoop'""".format(
+            key_file, namenode_ip_address
+            )
+
         cmds.append(cmd)
 
         for c in cmds:

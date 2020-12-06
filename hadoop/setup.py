@@ -1,3 +1,4 @@
+import subprocess
 from hadoop_scale_down import KEY_NAME, NUM_OF_INSTANCES, REGION_NAME, SECURITY_GROUP_NAME
 import boto3
 import pprint as pp
@@ -12,7 +13,8 @@ config = json.load(open('settings/config.json', "r"))
 SECURITY_GROUP_NAME = config["security_group_name"]
 KEY_NAME = config["key_name"]
 NUM_OF_INSTANCES = config["number_of_production_server"]
-REGION_NAME = 'us-east-1'
+REGION_NAME = config['region_name']
+
 with open('aws_token.txt','r') as f:
     tokens = []
     for i in f.readlines():
@@ -34,11 +36,10 @@ session = boto3.session.Session(
     aws_secret_access_key=aws_secret_access_key,
     aws_session_token=aws_session_token,
     region_name=REGION_NAME,)
-try:
-    ec2 = session.client("ec2")
-    ec2_resource = session.resource("ec2")
-except:
-    print('get fucked')
+
+ec2 = session.client("ec2")
+ec2_resource = session.resource("ec2")
+
 
 
 def generate_key_pairs(key_name):
@@ -71,7 +72,7 @@ def create_security_group(security_group_name):
             IpPermissions=[
                 {
                     "IpProtocol": "tcp",
-                    "FromPort": 80,
+                    "FromPort": 80, ## http
                     "ToPort": 80,
                     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
                 },
@@ -81,17 +82,28 @@ def create_security_group(security_group_name):
                     "ToPort": 22,
                     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
                 },
+                # {
+                #     "IpProtocol": "tcp",
+                #     "FromPort": 27017,  ## MongoDB
+                #     "ToPort": 27017,
+                #     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
+                # },
+                # {
+                #     "IpProtocol": "tcp",
+                #     "FromPort": 3306,  ## mySQL
+                #     "ToPort": 3306,
+                #     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
+                # },
                 {
                     "IpProtocol": "tcp",
-                    "FromPort": 27017,  ## MongoDB
-                    "ToPort": 27017,
-                    "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": 3306,  ## mySQL
-                    "ToPort": 3306,
-                    "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
+                    "FromPort": 0,
+                    "ToPort": 65535,
+                    "UserIdGroupPairs": [
+                        {
+                            "Description": "betterread-analytics",
+                            "GroupId": security_group_id,
+                        },
+                    ],
                 },
             ],
         )
@@ -117,7 +129,6 @@ def create_new_webserver_instance(security_group_name, key_name, numofinstances)
             print("key-pair: {} exists.".format(key_name))
             ec2.delete_key_pair(KeyName=key_name)
             print("Deleting existing key-pair", key_name)
-            #should delete setting/key_name.pem
             os.remove("./settings/{}.pem".format(key_name))
             break
     print('calling generate keys')
@@ -151,11 +162,10 @@ def execute_commands_in_instance_mysql(public_ip_address, key_name):
 
     instance_ip = public_ip_address
 
-    cmd1 = 'wget --output-document=setup_sql.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mysql_script/load_sql_db.sh'
-    cmd2 = 'chmod +x setup_sql.sh'
-    cmd3 = "./setup_sql.sh"
-    cmd4 = 'rm setup_sql.sh;ls'
-    cmds = [cmd1,cmd2,cmd3,cmd4]
+    cmd1 = 'wget --output-document=sqlscript.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mysql_script/sqlscript.sh'
+    cmd2 = 'sh sqlscript.sh'
+
+    cmds = [cmd1, cmd2]
 
     try:
 
@@ -166,7 +176,7 @@ def execute_commands_in_instance_mysql(public_ip_address, key_name):
         # Execute a command(cmd) after connecting/ssh to an instance
         for cmd in cmds:
             stdin, stdout, stderr = client.exec_command(cmd)
-            print(stdout)
+            print(stdout.read().decode())
             print(stdout.channel.recv_exit_status())
 
         client.close()
@@ -186,8 +196,8 @@ def execute_commands_in_instance_mongodb(public_ip_address, key_name):
     instance_ip = public_ip_address
        
     cmd1 = 'wget --output-document=mongo_script.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mongo_script/mongo_script.sh'
-    cmd2 = './mongo_script.sh'
-    cmd3 = './mongo_script.sh'
+    cmd2 = 'sh mongo_script.sh'
+    cmd3 = 'sh mongo_script.sh'
 
     cmds = [cmd1,cmd2,cmd3]
 
@@ -200,7 +210,7 @@ def execute_commands_in_instance_mongodb(public_ip_address, key_name):
         # Execute a command(cmd) after connecting/ssh to an instance
         for cmd in cmds:
             stdin, stdout, stderr = client.exec_command(cmd)
-            print(stdout)
+            print(stdout.read().decode())
             print(stdout.channel.recv_exit_status())
 
         client.close()
@@ -222,10 +232,8 @@ def execute_commands_in_instance_server(
     instance_ip = public_ip_address
 
     cmd1 = "git clone https://{}:{}@github.com/tanshinjie/database_project.git".format(
-        github_username, github_password
+         github_username, github_password    #hohouyj,6be161cf885ca17ec448e4d98dbdef97b3bbd9f6
     )
-    #cmd1 = 'sudo apt update;sudo apt install subversion'
-    #cmd2 = 'svn checkout https://github.com/hohouyj/database-setup-test/trunk/database_project'
     cmd3 = "sh ~/database_project/setup.sh"
     cmds = [cmd1,cmd3]
 
@@ -244,34 +252,55 @@ def execute_commands_in_instance_server(
     except Exception as e:
         print(e)
 
+def transfer_ips_to_webserver_instance(public_ip_address, key_name, iplist):
+
+    with open('settings/ip_list.json','+w') as f:
+        f.write(json.dumps(iplist))
+    
+    cmd1 = "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'".format(public_ip_address)
+    cmd2 = 'scp -i settings/{}.pem settings/ip_list.json ubuntu@{}:~/'.format(key_name,public_ip_address)
+
+    cmds = [cmd1,cmd2]
+    for c in cmds:
+        subprocess.run(c,shell=True)
 
 if __name__ == "__main__":
 
     github_username = input("Github username? ")
-    
+    github_password = getpass.getpass("Github password? ")
 
-    github_password = getpass.getpass("Github password? ") 
     try:
 
         instance = create_new_webserver_instance(SECURITY_GROUP_NAME, KEY_NAME, NUM_OF_INSTANCES)
 
         print("Sleeping the program for 60 seconds to let the instance to be configured..")
         time.sleep(90)
-
+        
+        #reload MySQL instance and run commands
         instance[0].reload()
         execute_commands_in_instance_mysql(instance[0].public_ip_address, KEY_NAME)
-        print("sql setup done")
+        print("MySQL setup done!")
 
+        #reload mongodb instance and run commands
         instance[1].reload()
         execute_commands_in_instance_mongodb(instance[1].public_ip_address, KEY_NAME)
-        print("mongodb setup done")
+        print("mongodb setup done!")
 
+        #reload webserver instance and run commands
         instance[2].reload()
-        print(instance[2].public_ip_address)
-        iplist = []
-        iplist = [instance[0].public_ip_address, instance[1].public_ip_address]
+        #print(instance[2].public_ip_address)
+        #Collect databases ip and dump into settings/ip_list.json
+        #then pass to webserver via scp
+        iplist = {
+            'mysql_ip' : instance[0].private_ip_address,
+            'mongodb_ip' : instance[1].private_ip_address,
+            'webserver_ip' : instance[2].private_ip_address
+        }
+        print('passing ips to webserver instance')
+        transfer_ips_to_webserver_instance(instance[2].public_ip_address, KEY_NAME, iplist)
 
-        execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME ,github_username, github_password)#, iplist)
-        print("server setup done, can view in:", instance[2].public_ip_address)
+        execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME,github_username, github_password)#, iplist)
+        print("webserver setup done, can view in:", instance[2].public_ip_address)
+
     except Exception as error:
         print(error)
