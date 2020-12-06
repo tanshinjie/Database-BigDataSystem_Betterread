@@ -20,6 +20,8 @@ echo "=== Running Set Up for Mongo Instance === "
     # wget -c https://metadataclean.s3.amazonaws.com/book_title_author.json -O title_author.json
     wget -c https://metadataclean.s3.amazonaws.com/full_metadata.json -O metadata_clean.json
     wget -c https://www.dropbox.com/s/9f209e96fpntmod/mongod.conf?dl=0 -O mongod.conf
+    wget -c https://www.dropbox.com/s/fl28bmgnd4x165j/mongo_index.js?dl=0 -O mongo_index.js
+
 } || {
     # catch
     echo "ERROR: downloading data"
@@ -52,9 +54,16 @@ sudo service mongod restart
 {
     echo "Importing dataset"
     mongoimport -d dbMeta -c kindle_metadata --file metadata_clean.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
-    #mongoimport -d dbMeta -c title_author --file title_author.json --authenticationDatabase admin --username 'admin' --password 'password' --jsonArray
+   
 } || {
     echo "ERROR: importing data to mongo"
 }
+echo "=== Getting node === "
+sudo apt update
+sudo apt install -y nodejs
+sudo apt install -y npm
+sudo npm install mongodb
+echo "=== Indexing mongo collection === "
+node mongo_index.js
 
 echo "=== Finished Set Up for Mongo Instance === "
