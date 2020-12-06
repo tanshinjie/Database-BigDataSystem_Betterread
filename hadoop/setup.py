@@ -162,13 +162,10 @@ def execute_commands_in_instance_mysql(public_ip_address, key_name):
 
     instance_ip = public_ip_address
 
-    #cmd1 = 'scp -i settings/betterread.pem -r scripts/sqlscript.sh ubuntu@{}:~/'.format(public_ip_address)
-    #s3://istd50043-database-project/mysql_script/sqlscript.sh
     cmd1 = 'wget --output-document=sqlscript.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mysql_script/sqlscript.sh'
     cmd2 = 'sh sqlscript.sh'
-    # cmd3 = "./setup_sql.sh"
-    # cmd4 = 'rm setup_sql.sh;ls'
-    cmds = [cmd1, cmd2]#,cmd3,cmd4]
+
+    cmds = [cmd1, cmd2]
 
     try:
 
@@ -235,15 +232,10 @@ def execute_commands_in_instance_server(
     instance_ip = public_ip_address
 
     cmd1 = "git clone https://{}:{}@github.com/tanshinjie/database_project.git".format(
-         github_username, github_password
-     )
-    #6be161cf885ca17ec448e4d98dbdef97b3bbd9f6
-    #cmd1 = 'sudo apt update;sudo apt install subversion -y'
-    #cmd2 = 'svn checkout https://github.com/hohouyj/database-setup-test/trunk/database_project'
+         github_username, github_password    #hohouyj,6be161cf885ca17ec448e4d98dbdef97b3bbd9f6
+    )
     cmd3 = "sh ~/database_project/setup.sh"
-    cmds = [cmd1,
-            #cmd2,
-            cmd3]
+    cmds = [cmd1,cmd3]
 
     try:
         client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
@@ -260,6 +252,17 @@ def execute_commands_in_instance_server(
     except Exception as e:
         print(e)
 
+def transfer_ips_to_webserver_instance(public_ip_address, key_name, iplist):
+
+    with open('settings/ip_list.json','+w') as f:
+        f.write(json.dumps(iplist))
+    
+    cmd1 = "ssh -o 'StrictHostKeyChecking no' {} 'echo 1 > /dev/null'".format(public_ip_address)
+    cmd2 = 'scp -i settings/{}.pem settings/ip_list.json ubuntu@{}:~/'.format(key_name,public_ip_address)
+
+    cmds = [cmd1,cmd2]
+    for c in cmds:
+        subprocess.run(c,shell=True)
 
 if __name__ == "__main__":
 
@@ -289,15 +292,12 @@ if __name__ == "__main__":
         #Collect databases ip and dump into settings/ip_list.json
         #then pass to webserver via scp
         iplist = {
-            'mysql_ip' : instance[0].public_ip_address,
-            'mongodb_ip' : instance[1].public_ip_address,
-            'webserver_ip' : instance[2].public_ip_address
+            'mysql_ip' : instance[0].private_ip_address,
+            'mongodb_ip' : instance[1].private_ip_address,
+            'webserver_ip' : instance[2].private_ip_address
         }
         print('passing ips to webserver instance')
-        with open('settings/ip_list.json','+w') as f:
-            f.write(json.dumps(iplist))
-        c = 'scp -i settings/{}.pem -r settings/ip_list.json ubuntu@{}:~/'.format(KEY_NAME,instance[2].public_ip_address)
-        process = subprocess.run(c, shell=True)
+        transfer_ips_to_webserver_instance(instance[2].public_ip_address, KEY_NAME, iplist)
 
         execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME,github_username, github_password)#, iplist)
         print("webserver setup done, can view in:", instance[2].public_ip_address)
