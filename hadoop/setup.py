@@ -232,8 +232,10 @@ def execute_commands_in_instance_server(
     instance_ip = public_ip_address
 
     cmd1 = "git clone https://{}:{}@github.com/tanshinjie/database_project.git".format(
-         github_username, github_password    #hohouyj,6be161cf885ca17ec448e4d98dbdef97b3bbd9f6
+        github_username, github_password    #hohouyj,6be161cf885ca17ec448e4d98dbdef97b3bbd9f6
     )
+    # cmd1 = 'sudo apt install subversion -y'
+    # cmd2 = 'svn checkout https://github.com/tanshinjie/database_project/branches/ui_router_rework'
     cmd3 = "sh ~/database_project/setup.sh"
     cmds = [cmd1,cmd3]
 

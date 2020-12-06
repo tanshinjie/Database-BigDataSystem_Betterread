@@ -106,3 +106,19 @@ echo Done.
 
     with open("./scripts/setup_hadoop_config.sh", "w+") as f:
         f.write(script)
+
+
+def generate_spark_script(hostname):
+    workers = ''
+    for i in hostname:
+        ls = []
+        if i[0] == 'd':
+            workers = workers + i
+    script = """WORKERS="{}" #edit this in script generator""".format(workers)
+    line_prepender('scripts/spark_setup_all.sh',script)
+
+def line_prepender(filename, line):
+    with open(filename, 'r+') as f:
+        content = f.read()
+        f.seek(0, 0)
+        f.write(line.rstrip('\r\n') + '\n' + content)
