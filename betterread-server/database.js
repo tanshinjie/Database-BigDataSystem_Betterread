@@ -1,9 +1,13 @@
+const os = require("os");
 const fs = require("fs");
 const path = require("path");
 const mysql = require("mysql");
 const { MongoClient } = require("mongodb");
 
-ip_list = JSON.parse(fs.readFileSync(path.resolve("ip_list.json"), "utf-8"));
+ip_list = JSON.parse(
+  fs.readFileSync(path.resolve(os.homedir(), "ip_list.json"), "utf-8")
+);
+console.log("ip_list", ip_list);
 
 const URI = `mongodb://admin:password@${ip_list.mongodb_ip}:27017`;
 const mysqlClient = mysql.createConnection({
