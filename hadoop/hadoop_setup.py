@@ -153,20 +153,31 @@ if __name__ == "__main__":
             )
         cmds.append(cmd)
 
-        #############################
-        ### Step 7.1: Setup Spark ###
-        #############################
-        cmd = """ssh -i {} ubuntu@{} 'sudo su -c 'sh home/scripts/spark_setup_all.sh' hadoop'""".format(
-            key_file, namenode_ip_address
-            )
-
-        cmds.append(cmd)
-
         for c in cmds:
             print("================================================================")
             print("Executing: ", c)
             process = subprocess.run(c, shell=True)
         print(process.stdout)
+
+
+        #############################
+        ### Step 7.1: Setup Spark ###
+        #############################
+        key = paramiko.RSAKey.from_private_key_file(key_file)
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        client.connect(hostname=namenode_ip_address, username="ubuntu", pkey=key)
+        cmds = []
+        cmd1 = 'sudo cp /home/ubuntu/scripts/spark_setup_all.sh /home/hadoop && sudo chown hadoop:hadoop /home/hadoop'
+        cmd2 = "sudo su -c 'cd;sh spark_setup_all.sh' hadoop"
+        cmds = [cmd1,cmd2]
+        for c in cmds:
+            stdin, stdout, stderr = client.exec_command(c)
+            print(stdout.read().decode())
+            print(stdout.channel.recv_exit_status())
+
+        client.close()
 
         ###################################
         ### Step 8: Save system details ###
