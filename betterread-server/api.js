@@ -230,9 +230,12 @@ router.post("/review", (req, res) => {
   console.log("POST /book");
   const { summary, review, asin, overall, name } = req.body;
   const timestamp = Date.now();
+  const helpful = "[0, 0]";
   const query =
-    "INSERT INTO reviews (asin, reviewerName, reviewText, summary, overall, reviewTime) VALUES ?";
-  const values = [[asin, name, review, summary, overall, timestamp]];
+    "INSERT INTO reviews (asin, helpful, overall, reviewText, reviewTime, reviewerID, reviewerName, summary, unixReviewTime) VALUES ?";
+  const values = [
+    [asin, helpful, overall, review, timestamp, name, name, summary, timestamp],
+  ];
   mysqlClient.query(query, [values], function (err, result) {
     if (err) {
       req.resCode = 500;
