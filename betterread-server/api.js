@@ -234,7 +234,7 @@ router.post("/review", (req, res) => {
   const query =
     "INSERT INTO reviews (asin, helpful, overall, reviewText, reviewTime, reviewerID, reviewerName, summary, unixReviewTime) VALUES ?";
   const values = [
-    [asin, helpful, overall, review, timestamp, name, name, summary, timestamp],
+    [asin, helpful, overall, review, timestamp, name, name, summary, 0],
   ];
   mysqlClient.query(query, [values], function (err, result) {
     if (err) {
