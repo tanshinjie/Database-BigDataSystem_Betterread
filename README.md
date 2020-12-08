@@ -50,6 +50,8 @@ The estimated time for the setup is around 10 - 15 minutes.
 
 Execute `python3 mongo_ingest.py`. The script will prompt for private IP address of the MongoDB. At the end of the script, the metadata of books will be stored and distributed into the hadoop cluster.
 
+Execute `python3 mysql_ingest.py`. The script will prompt for private IP address of the MySQL. At the end of the script, the metadata of reviews will be stored and distributed into the hadoop cluster.
+
 ### Scaling Hadoop
 
 #### Commissioning

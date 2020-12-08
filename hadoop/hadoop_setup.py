@@ -19,11 +19,11 @@ with open('aws_token.txt','r') as f:
     for i in f.readlines():
         print(r'{}'.format(i))
         if i[0:17] == 'aws_access_key_id':
-            tokens.append(i[18:-1])
+            tokens.append(i[18:-1].strip())
         elif i[0:21] == 'aws_secret_access_key':
-            tokens.append(i[22:-1])
+            tokens.append(i[22:-1].strip())
         elif i[0:17] == 'aws_session_token':
-            tokens.append(i[18:])
+            tokens.append(i[18:].strip())
     print(tokens)
 
 aws_access_key_id = tokens[0]
@@ -153,15 +153,23 @@ if __name__ == "__main__":
             )
         cmds.append(cmd)
 
+        ##############################
+        ### Step 7.1: Setup sqoop ####
+        ##############################
+
+        cmd = "ssh -i {} ubuntu@{} 'bash ~/scripts/setup_sqoop.sh'".format(
+            key_file, namenode_ip_address
+            )
+        cmds.append(cmd)
+
         for c in cmds:
             print("================================================================")
             print("Executing: ", c)
             process = subprocess.run(c, shell=True)
         print(process.stdout)
 
-
         #############################
-        ### Step 7.1: Setup Spark ###
+        ### Step 7.2: Setup Spark ###
         #############################
         key = paramiko.RSAKey.from_private_key_file(key_file)
         client = paramiko.SSHClient()

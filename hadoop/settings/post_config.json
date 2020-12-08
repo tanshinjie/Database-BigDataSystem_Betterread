@@ -1,0 +1,55 @@
+{
+    "last_changed": "2020-12-08 10:03:39.903133",
+    "region_name": "us-east-1",
+    "security_group_name": "betterread",
+    "key_name": "betterread",
+    "namenode_public_ip": "18.204.2.196",
+    "excludes": [],
+    "includes": [],
+    "node_offset": 4,
+    "number_of_production_server": 3,
+    "number_of_analytics_server": 4,
+    "production_server": {
+        "image_id": "ami-0885b1f6bd170450c",
+        "instance_type": "t2.micro",
+        "block_device_mappings": []
+    },
+    "analytics_server": {
+        "image_id": "ami-0885b1f6bd170450c",
+        "instance_type": "t2.xlarge",
+        "block_device_mappings": [
+            {
+                "DeviceName": "/dev/sda1",
+                "Ebs": {
+                    "VolumeSize": 16,
+                    "VolumeType": "gp2"
+                }
+            }
+        ]
+    },
+    "scale_factor": 0,
+    "public_ips": [
+        "18.204.2.196",
+        "34.237.52.48",
+        "3.237.3.37",
+        "34.204.190.30"
+    ],
+    "private_ips": [
+        "172.31.78.8",
+        "172.31.78.129",
+        "172.31.69.211",
+        "172.31.74.76"
+    ],
+    "hosts_name": [
+        "n1",
+        "d1",
+        "d2",
+        "d3"
+    ],
+    "host_ip_map": {
+        "n1": "172.31.78.8",
+        "d1": "172.31.78.129",
+        "d2": "172.31.69.211",
+        "d3": "172.31.74.76"
+    }
+}

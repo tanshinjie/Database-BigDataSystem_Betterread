@@ -8,30 +8,19 @@ if __name__ == "__main__":
     config = load_config('././settings/post_config.json')
     namenode_public_ip = config['namenode_public_ip']
     key_name = config['key_name']
-    key = paramiko.RSAKey.from_private_key_file('././settings/' + key_name + ".pem")
-
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
 
-        client.connect(hostname=namenode_public_ip, username="ubuntu", pkey=key)
+        cmd1 = """ssh -i ./settings/{}.pem ubuntu@{} \"sudo su -c 'sudo wget https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu1804-x86_64-100.2.1.deb' hadoop\"""".format(key_name,namenode_public_ip)        
+        cmd2 = """ssh -i ./settings/{}.pem ubuntu@{} \"sudo su -c 'sudo apt install ./mongodb-database-tools-*-100.2.1.deb' hadoop\"""".format(key_name,namenode_public_ip)        
+        cmd3 = """ssh -i ./settings/{}.pem ubuntu@{} \"sudo su -c 'mongoexport --uri=mongodb://{}:27017/dbMeta --collection=kindle_metadata --out=/home/hadoop/metadata.json --username admin --password password --authenticationDatabase admin' hadoop\"""".format(key_name,namenode_public_ip,mongo_ip)        
+        cmd4 = """ssh -i ./settings/{}.pem ubuntu@{} \"sudo su -c '/opt/hadoop-3.3.0/bin/hdfs dfs -mkdir /metadata' hadoop\"""".format(key_name,namenode_public_ip,mongo_ip)        
+        cmd5 = """ssh -i ./settings/{}.pem ubuntu@{} \"sudo su -c '/opt/hadoop-3.3.0/bin/hdfs dfs -put /home/hadoop/metadata.json /metadata' hadoop\"""".format(key_name,namenode_public_ip,mongo_ip)        
 
-        cmd1 = "sudo su -c 'wget https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu1804-x86_64-100.2.1.deb' hadoop"
-        cmd2 = "sudo apt install ./mongodb-database-tools-*-100.2.1.deb"
-        cmd3 = 'mongoexport --uri="mongodb://{}:27017/dbMeta"/ --collection=kindle_metadata --out=metadata.json --username admin --password password --authenticationDatabase admin'.format(mongo_ip)
-        cmd4 = "sudo su -c '/opt/hadoop-3.3.0/bin/hdfs dfs -mkdir /metadata' hadoop"
-        cmd5 = "sudo su -c '/opt/hadoop-3.3.0/bin/hdfs dfs -put ./metadata.json /metadata' hadoop"
-
-        cmds = [cmd5]
+        cmds = [cmd1,cmd2,cmd3,cmd4,cmd5]
 
         for cmd in cmds:
-            print(cmd)
-            stdin, stdout, stderr = client.exec_command(cmd)
-            print(stdout.read().decode())
-            print(stdout.channel.recv_exit_status())
-
-        client.close()
+            subprocess.run(cmd,shell=True)
 
 
     except Exception as e:

@@ -8,7 +8,7 @@
     "includes": [],
     "node_offset": 0,
     "number_of_production_server": 3,
-    "number_of_analytics_server": 3,
+    "number_of_analytics_server": 4,
     "production_server": {
         "image_id": "ami-0885b1f6bd170450c",
         "instance_type": "t2.micro",
@@ -16,12 +16,12 @@
     },
     "analytics_server": {
         "image_id": "ami-0885b1f6bd170450c",
-        "instance_type": "t2.micro",
+        "instance_type": "t2.xlarge",
         "block_device_mappings": [
             {
                 "DeviceName": "/dev/sda1",
                 "Ebs": {
-                    "VolumeSize": 8,
+                    "VolumeSize": 16,
                     "VolumeType": "gp2"
                 }
             }
