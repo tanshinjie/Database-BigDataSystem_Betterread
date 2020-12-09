@@ -37,8 +37,8 @@ npm run build
 sudo cp -r build /var/www/betterread/
 
 echo "Run backend"
-npm install pm2 -g
+sudo npm install pm2 -g
 cd ~/database_project/betterread-server/
-pm2 start app.js
+export NODE_ENV=production PORT=5000 && pm2 start app.js
 # node app.js
 
