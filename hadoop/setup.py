@@ -235,6 +235,7 @@ def execute_commands_in_instance_server(
     cmd3 = "sh ~/database_project/setup.sh"
     cmds = [cmd1,cmd3]
 
+
     try:
         client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
 
@@ -246,6 +247,7 @@ def execute_commands_in_instance_server(
             print(stdout.channel.recv_exit_status())
 
         client.close()
+
 
     except Exception as e:
         print(e)

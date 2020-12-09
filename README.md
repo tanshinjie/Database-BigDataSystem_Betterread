@@ -13,11 +13,14 @@ git clone https://github.com/tanshinjie/database_project.git
 
 For all system. please copy paste the AWS credentials `aws_access_key_id` , ` aws_secret_access_key`, ` aws_session_token` into **aws_token.txt**. The credentials will be parsed into automation script at the beginning of script.
 
-During the setup, any new key-pair generated will be stored under `hadoop/settings` directory. Keep the key in the folder as the path will be referenced for later configuration.
+During the setup, any new key-pair generated will be stored under `hadoop/settings` directory. Keep the key in the directory as the path will be referenced for later configuration.
+
+Note: In case of any error, please ensure the local copy of the public key and corresponding key-pair entry on AWS are removed before retrying.
+The script will assume clean setup everytime.
 
 ### Production System
 
-To setup the web servers and databases, specify the parameters in the given `config.json` under `/hadoop/settings`folder. A new config file named `prod_config.json` will also be updated with other parameters after the creation of the servers. \
+To setup the web servers and databases, specify the parameters in the given `config.json` under `/hadoop/settings`directory. A new config file named `prod_config.json` will also be updated with other parameters after the creation of the servers. \
 Execute
 `python3 setup.py` to launch three new EC2 servers.
 For inital setup, the parameters consulted by the scripts are:
@@ -30,10 +33,11 @@ For inital setup, the parameters consulted by the scripts are:
 
 The setup will prompt for Github username and password, kindly fill in your credentials.
 The estimated time for the setup is around 10 - 15 minutes.
+At the end of this setup, a updated config file named `production_config.json` will be generated under `/settings` directory.
 
 ### Analytics System
 
-Similar to production system, `config.json` will also be consulted to the setup of hadoop cluster w/spark.
+Similar to production system, `config.json` will also be consulted to the setup of hadoop cluster with spark.
 For inital setup, the parameters consulted by the scripts are:
 
 1. region_name
@@ -44,26 +48,27 @@ For inital setup, the parameters consulted by the scripts are:
 
 Execute `python3 hadoop_setup.py` to setup the hadoop cluster.
 The estimated time for the setup is around 10 - 15 minutes.
+At the end of this setup, a updated config file named `hadoop_config.json` will be generated under `/settings` directory.
 
 ## Data Ingestion
 
 ##### MongoDB
 
-Execute `python3 mongo_ingest.py`. The script will prompt for private IP address of the MongoDB. At the end of the script, the metadata of books will be stored and distributed into the hadoop cluster.
+Execute `python3 mongo_ingest.py`. The script will consult `production_config.json` for private IP address of the MongoDB. At the end of the script, the metadata of books will be stored and distributed into the hadoop cluster.
 
-Execute `python3 mysql_ingest.py`. The script will prompt for private IP address of the MySQL. At the end of the script, the metadata of reviews will be stored and distributed into the hadoop cluster.
+Execute `python3 mysql_ingest.py`. The script will consult `production_config.json` for private IP address of the MySQL. At the end of the script, the metadata of reviews will be stored and distributed into the hadoop cluster.
 
 ## Scaling Hadoop
 
 ### Commissioning
 
-To add new datanode, execute `python3 hadoop_scale_up.py` . The script will consult additional parameters such as **scale factor**, **namenode_public_ip** from `post_config.json` to determine the number of new datanode to be added and the namenode ip address. New EC2 instances will be created according to the configuration and key specified in the
-`post_config.json` .
+To add new datanode, execute `python3 hadoop_scale_up.py` . The script will consult additional parameters such as **scale factor**, **namenode_public_ip** from `hadoop_config.json` to determine the number of new datanode to be added and the namenode ip address. New EC2 instances will be created according to the configuration and key specified in the
+`hadoop_config.json` .
 
 ### Decommissioning
 
-To remove existing datanode, first includes the hostsname of the datanode in the **excludes** list under `post_config.json`. Then, execute `hadoop_scale_down.py`.
-The script will automatically decommission the datanode by their hostnames, the instance teardown is optional.
+To remove existing datanode, first includes the hostsname of the datanode in the **excludes** list under `hadoop_config.json`. Then, execute `hadoop_scale_down.py`.
+The script will automatically decommission the datanode by their hostnames, the instance teardown is optional. Kindly uncomment the respective teardown function call if teardown is intended.
 
 ## Features
 
@@ -75,7 +80,8 @@ The production system has the following features:
 2. Apply "Genre" and "Ratings" filter when searching
 3. Add new books to database
 4. Add new reviews to database
-5. Random name generator for reviewer name
+5. Get reviews by asin
+6. Random name generator for reviewer
 
 ### Analytics
 

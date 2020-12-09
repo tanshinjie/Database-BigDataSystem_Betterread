@@ -1,8 +1,8 @@
 {
     "last_changed": "",
     "region_name": "us-east-1",
-    "security_group_name": "test-production",
-    "key_name": "test-production",
+    "security_group_name": "test-production-1",
+    "key_name": "test-production-1",
     "namenode_public_ip": "",
     "excludes": [],
     "includes": [],
