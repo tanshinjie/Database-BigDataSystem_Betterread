@@ -96,6 +96,8 @@ const Review = () => {
 
   useEffect(() => {
     if (!bookDetail) {
+      console.log(`Retrieving book details for asin=${asin}`);
+      console.log(`Retrieving reviews for asin=${asin}`);
       axios
         .all([
           axios.get(

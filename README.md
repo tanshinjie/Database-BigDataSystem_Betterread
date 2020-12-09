@@ -2,8 +2,8 @@
 
 ## Automation Prerequisites
 
-python3
-boto3
+python3\
+boto3\
 paramiko
 
 ## Instructions
@@ -11,13 +11,14 @@ paramiko
 Clone the project repository using the following command
 git clone https://github.com/tanshinjie/database_project.git
 
-For all system. please copy paste the AWS credentials `aws_access_key_id` , ` aws_secret_access_key`, ` aws_session_token` into **aws_token.txt**. The credentials will be parsed into boto3 at the beginning of script generation.
+For all system. please copy paste the AWS credentials `aws_access_key_id` , ` aws_secret_access_key`, ` aws_session_token` into **aws_token.txt**. The credentials will be parsed into automation script at the beginning of script.
 
-During the setup, any new key-pair generated will be stored under setup/settings. Keep the key in the folder as the path will be referenced for later configuration.
+During the setup, any new key-pair generated will be stored under `hadoop/settings` directory. Keep the key in the folder as the path will be referenced for later configuration.
 
-## Production System
+### Production System
 
-To setup the web servers and databases, specify the parameters in the given `config.json` under `/setup/settings`folder. The config file will also be updated with other parameters after the creation of the servers. Execute
+To setup the web servers and databases, specify the parameters in the given `config.json` under `/hadoop/settings`folder. A new config file named `prod_config.json` will also be updated with other parameters after the creation of the servers. \
+Execute
 `python3 setup.py` to launch three new EC2 servers.
 For inital setup, the parameters consulted by the scripts are:
 
@@ -30,7 +31,7 @@ For inital setup, the parameters consulted by the scripts are:
 The setup will prompt for Github username and password, kindly fill in your credentials.
 The estimated time for the setup is around 10 - 15 minutes.
 
-## Analytics System
+### Analytics System
 
 Similar to production system, `config.json` will also be consulted to the setup of hadoop cluster w/spark.
 For inital setup, the parameters consulted by the scripts are:
@@ -44,7 +45,7 @@ For inital setup, the parameters consulted by the scripts are:
 Execute `python3 hadoop_setup.py` to setup the hadoop cluster.
 The estimated time for the setup is around 10 - 15 minutes.
 
-### Data Ingestion
+## Data Ingestion
 
 ##### MongoDB
 
@@ -52,59 +53,80 @@ Execute `python3 mongo_ingest.py`. The script will prompt for private IP address
 
 Execute `python3 mysql_ingest.py`. The script will prompt for private IP address of the MySQL. At the end of the script, the metadata of reviews will be stored and distributed into the hadoop cluster.
 
-### Scaling Hadoop
+## Scaling Hadoop
 
-#### Commissioning
+### Commissioning
 
-To add new datanode, execute `hadoop_scale_up.py` . The script will consult additional parameters such as **scale factor**, **namenode_ip_address** from `config.json` to determine the number of new datanode to be added and the namenode ip address. New EC2 instances will be created according to the configuration and key specified in the
-`config.json` .
+To add new datanode, execute `python3 hadoop_scale_up.py` . The script will consult additional parameters such as **scale factor**, **namenode_public_ip** from `post_config.json` to determine the number of new datanode to be added and the namenode ip address. New EC2 instances will be created according to the configuration and key specified in the
+`post_config.json` .
 
-#### Decommissioning
+### Decommissioning
 
-To remove existing datanode, first includes the hostsname of the datanode in the **excludes** list under `config.json`. Then, execute `hadoop_scale_down.py`.
+To remove existing datanode, first includes the hostsname of the datanode in the **excludes** list under `post_config.json`. Then, execute `hadoop_scale_down.py`.
 The script will automatically decommission the datanode by their hostnames, the instance teardown is optional.
 
-## Design
+## Features
 
-### 1. Books Metadata
+### Prodcution
 
-**Schema (MongoDB)**
+The production system has the following features:
 
-- id: ObjectId, primary key
-- asin: String
-- price: Double
-- imUrl: String
-- related?: json
-  - also_bought: string[]
-  - buy_afterviewing: string[]
-- categories: String[]
-- title: String
-- author: String
+1. Search books by author, title
+2. Apply "Genre" and "Ratings" filter when searching
+3. Add new books to database
+4. Add new reviews to database
+5. Random name generator for reviewer name
 
-### 2. Logs
+### Analytics
 
-**Schema (MongoDB)**
+The analytics system has the following features:
 
-- timeStamp: String
-- reqType: String
-- resCode: String
+1. Data ingestion
+2. Pearson Correlation
+3. TF-IDF
+4. Scaling of Hadoop Cluster
+5. Easy Start / Stop of Hadoop Cluster
 
-### 3. Review Data
+## Extra Efforts
 
-**MySQL Fields**
+As the dataset provided does not have important information such as title and author required by the application, we programmed a python web crawler to scrapt the title and author to complement the given dataset. The crawler script can be found under `/helper` directory.
 
-`id` INT(11) NOT NULL AUTO_INCREMENT,
-`asin` VARCHAR(255) NOT NULL,
-`helpful` VARCHAR(255) NOT NULL,
-`overall` INT(11) NOT NULL,
-`reviewText` TEXT NOT NULL,
-`reviewTime` VARCHAR(255) NOT NULL,
-`reviewerID` VARCHAR(255) NOT NULL,
-`reviewerName` VARCHAR(255) NOT NULL,
-`summary` VARCHAR(255) NOT NULL,
-`unixReviewTime` INT(11) NOT NULL,PRIMARY KEY (`id`));
+## Data Schema
 
-### Analytics Backend
+### 1. Books Metadata (MongoDB)
+
+- `id`: ObjectId, primary key
+- `asin`: String
+- `price`: Double
+- `imUr`l: String
+- `related`: Object
+  - `also_bough`t: String[]
+  - `buy_afterviewing`: String[]
+- `categories`: String[]
+- `title`: String
+- `author`: String
+
+### 2. Logs (MongoDB)
+
+- `timeStamp`: String
+- `reqType`: String
+- `resCode`: Number
+- `url`: String
+
+### 3. Review Data (MySQL)
+
+- `id` INT(11) NOT NULL AUTO_INCREMENT
+- `asin` VARCHAR(255) NOT NULL,
+- `helpful` VARCHAR(255) NOT NULL,
+- `overall` INT(11) NOT NULL,
+- `reviewText` TEXT NOT NULL,
+- `reviewTime` VARCHAR(255) NOT NULL,
+- `reviewerID` VARCHAR(255) NOT NULL,
+- `reviewerName` VARCHAR(255) NOT NULL,
+- `summary` VARCHAR(255) NOT NULL,
+- `unixReviewTime` INT(11) NOT NULL,PRIMARY KEY (`id`));
+
+## Analytics Description
 
 1. Pearson Correlation
 
@@ -126,13 +148,13 @@ The script after running the 5 map-reduce jobs combines them as in the img above
 
 - TFIDF - We import MYSQL table containing the reviewText into hadoop and tokenize the data into a list of words. For each word, we calculate the term frequency(tf) values storing them as vectors. Next, we calculate their inverse document frequency(idf), treating each review as 1 document. Having the final tfidf value, we get the actual word from their index in the vectors and return it as a csv file.
 
-#### Design
+### Overview
 
 The EC2 instances will be setup as in the following structure
 | Instance Number | Content | Details |
 |-----------------|-------------------------|----------------|
-| 1 | <ul><li>Frontend (React)</li><li>Backend (Express)</li></ul> | The frontend is served at port 80 and backend is hosted at port 5000, the website can be viewed at &lt;public IP 1> . The backend retrieves information from the databases via their IP addresses. |
-| 2 | Kindle Reviews (MySQL) | The data can be accessed by the backend and namenode at &lt;public IP 2&gt;:3306. |
-| 3 | <ul><li>Books Metadata (MongoDB)</li><li>Logs (MongoDB)</li> </ul> | The data can be accessed by the backend and namenode at &lt;public IP 3&gt;:27017. |
-| 4 | <ul><li>Namenode (HDFS)</li><li>Driver (Spark)</li></ul> | The namenode is configured to store the public DNS of the datanodes. The HDFS cluster can be view at &lt;public IP 4&gt;:<?> . When the client issues an analytics job, data is retrieved from the databases via their IP addresses. The driver delegates tasks to the workers by ssh-ing into the datanodes. Upon completion, the driver returns the output file. |
+| 1 | <ul><li>Frontend (React)</li><li>Backend (Express)</li></ul> | The frontend is served at port 80 and backend is hosted at port 5000, the website can be viewed at &lt;public IP> . The backend retrieves information from the databases via their IP addresses. |
+| 2 | Kindle Reviews (MySQL) | The data can be accessed by the backend and namenode at &lt;private IP&gt;:3306. |
+| 3 | <ul><li>Books Metadata (MongoDB)</li><li>Logs (MongoDB)</li> </ul> | The data can be accessed by the backend and namenode at &lt;private IP&gt;:27017. |
+| 4 | <ul><li>Namenode (HDFS)</li><li>Driver (Spark)</li></ul> | The namenode is configured to store the public DNS of the datanodes. When the client issues an analytics job, data is retrieved from the databases via their IP addresses. The driver delegates tasks to the workers by ssh-ing into the datanodes. Upon completion, the driver returns the output file. |
 | 5+ | <ul><li>Datanode (HDFS)</li><li>Worker (Spark)</li></ul> | The worker performs the tasks assigned by the driver. |

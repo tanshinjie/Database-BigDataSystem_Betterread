@@ -86,7 +86,7 @@ const AddBook = () => {
   };
 
   const addBook = async () => {
-    console.log(title, author, description);
+    console.log(`Adding new book: ${title}, ${author}, ${description}`);
     handleToggle();
     await axios
       .post(`http://${window.location.hostname}:5000/api/book`, {

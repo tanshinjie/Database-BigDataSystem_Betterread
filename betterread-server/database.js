@@ -16,13 +16,7 @@ const mysqlClient = mysql.createConnection({
   password: "password",
   database: "kindle_reviews",
 });
-// const mysqlClient = mysql.createConnection({
-//   host: `${ip_list.mysql_ip}`,
-//   port: 3340,
-//   user: "shinjie",
-//   password: "shinjie",
-//   database: "kindle_reviews",
-// });
+
 const mongoClient = new MongoClient(URI, { useUnifiedTopology: true });
 
 mysqlClient.connect((err) => {

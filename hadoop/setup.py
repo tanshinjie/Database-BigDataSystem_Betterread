@@ -1,5 +1,4 @@
 import subprocess
-from hadoop_scale_down import KEY_NAME, NUM_OF_INSTANCES, REGION_NAME, SECURITY_GROUP_NAME
 import boto3
 import pprint as pp
 import os
@@ -8,23 +7,27 @@ import time
 from botocore.exceptions import ClientError
 import json
 import getpass
+from util import *
+import copy
+from datetime import datetime 
 
-config = json.load(open('settings/config.json', "r"))
+config = load_config()
 SECURITY_GROUP_NAME = config["security_group_name"]
 KEY_NAME = config["key_name"]
 NUM_OF_INSTANCES = config["number_of_production_server"]
 REGION_NAME = config['region_name']
 
+start_time = time.time()
 with open('aws_token.txt','r') as f:
     tokens = []
     for i in f.readlines():
         print(r'{}'.format(i))
         if i[0:17] == 'aws_access_key_id':
-            tokens.append(i[18:-1])
+            tokens.append(i[18:-1].strip())
         elif i[0:21] == 'aws_secret_access_key':
-            tokens.append(i[22:-1])
+            tokens.append(i[22:-1].strip())
         elif i[0:17] == 'aws_session_token':
-            tokens.append(i[18:])
+            tokens.append(i[18:].strip())
     print(tokens)
 
 aws_access_key_id = tokens[0]
@@ -39,7 +42,6 @@ session = boto3.session.Session(
 
 ec2 = session.client("ec2")
 ec2_resource = session.resource("ec2")
-
 
 
 def generate_key_pairs(key_name):
@@ -88,18 +90,6 @@ def create_security_group(security_group_name):
                     "ToPort": 5000,
                     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
                 },
-                # {
-                #     "IpProtocol": "tcp",
-                #     "FromPort": 27017,  ## MongoDB
-                #     "ToPort": 27017,
-                #     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
-                # },
-                # {
-                #     "IpProtocol": "tcp",
-                #     "FromPort": 3306,  ## mySQL
-                #     "ToPort": 3306,
-                #     "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
-                # },
                 {
                     "IpProtocol": "tcp",
                     "FromPort": 0,
@@ -202,10 +192,12 @@ def execute_commands_in_instance_mongodb(public_ip_address, key_name):
     instance_ip = public_ip_address
        
     cmd1 = 'wget --output-document=mongo_script.sh https://istd50043-database-project.s3.us-east-1.amazonaws.com/mongo_script/mongo_script.sh'
-    cmd2 = 'sh mongo_script.sh'
+    cmd2 = 'wget --output-document=create_index.js https://istd50043-database-project.s3.us-east-1.amazonaws.com/mongo_script/create_index.js'
     cmd3 = 'sh mongo_script.sh'
+    cmd4 = 'sh mongo_script.sh'
+    cmd5 = 'mongo -username admin -password password < create_index.js'
 
-    cmds = [cmd1,cmd2,cmd3]
+    cmds = [cmd1,cmd2,cmd3,cmd4,cmd5]
 
     try:
 
@@ -307,6 +299,20 @@ if __name__ == "__main__":
 
         execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME,github_username, github_password)#, iplist)
         print("webserver setup done, can view in:", instance[2].public_ip_address)
+
+        mysql_private_ip = instance[0].private_ip_address
+        mongo_private_ip = instance[1].private_ip_address
+        webserver_public_ip = instance[2].public_ip_address
+
+        new_config = copy.deepcopy(config)
+        new_config["last_changed"] = str(datetime.now())
+        new_config["webserver_public_ip"] = webserver_public_ip
+        new_config["mongo_private_ip"] = mongo_private_ip
+        new_config["mysql_private_ip"] = mysql_private_ip
+        with open('./settings/production_config.json','w') as f:
+            f.write(json.dumps(new_config))
+            
+        print("--- {} seconds ---".format(time.time() - start_time))
 
     except Exception as error:
         print(error)

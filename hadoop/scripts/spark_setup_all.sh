@@ -61,3 +61,7 @@ for j in ${WORKERS};
 do echo 'WORKERNODE JPS'
    ssh hadoop@$j 'jps'
 done
+
+
+sudo apt -y install python3-pip
+pip3 install pyspark

@@ -74,6 +74,7 @@ const AddReview = () => {
 
   useEffect(() => {
     if (!bookDetail) {
+      console.log(`Retrieving book details for asin=${asin}`);
       axios
         .get(
           `http://${window.location.hostname}:5000/api/book?asin=${asin}&brief=true`
@@ -103,6 +104,9 @@ const AddReview = () => {
   const addReview = async () => {
     // TODO: Post request to add review
     handleToggle();
+    console.log(
+      `Adding new review: ${asin}, ${name}, ${summary}, ${overall}. ${review}`
+    );
     await axios
       .post(`http://${window.location.hostname}:5000/api/review`, {
         asin,

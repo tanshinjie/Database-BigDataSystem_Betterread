@@ -13,7 +13,7 @@ if __name__ == "__main__":
         if sys.argv[1] == "start":
             cmd = (
                 "ssh -i {} ubuntu@{} ".format(key_file, namenode_public_ip)
-                + "\"sudo su -c '/opt/hadoop-3.3.0/sbin/start-dfs.sh && /opt/hadoop-3.3.0/sbin/start-yarn.sh' hadoop\""
+                + "\"sudo su -c '/opt/hadoop-3.3.0/sbin/start-dfs.sh && /opt/hadoop-3.3.0/sbin/start-yarn.sh; /opt/hadoop-3.3.0/bin/hdfs dfsadmin -report' hadoop\""
             )
         elif sys.argv[1] == "stop":
             cmd = (
