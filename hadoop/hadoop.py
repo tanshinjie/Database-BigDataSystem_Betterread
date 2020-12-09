@@ -6,7 +6,7 @@ if __name__ == "__main__":
     if len(sys.argv) != 2 or sys.argv[1] not in ["start", "stop"]:
         print("Usage: python3 hadoop.py [start|stop]")
     else:
-        config = load_config("./settings/post_config.json")
+        config = load_config("./settings/hadoop_config.json")
         key_file = "./settings/{}.pem".format(config["key_name"])
         namenode_public_ip = config["namenode_public_ip"]
         cmd = ""

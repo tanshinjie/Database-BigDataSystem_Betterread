@@ -11,8 +11,6 @@ sudo su -c 'cat ./tmp/mapred-site.xml > ~/hadoop-3.3.0/etc/hadoop/mapred-site.xm
 
 sudo su -c "rm ~/hadoop-3.3.0/etc/hadoop/workers" hadoop
 sudo su -c 'echo d1 >> ~/hadoop-3.3.0/etc/hadoop/workers' hadoop
-sudo su -c 'echo d2 >> ~/hadoop-3.3.0/etc/hadoop/workers' hadoop
-sudo su -c 'echo d3 >> ~/hadoop-3.3.0/etc/hadoop/workers' hadoop
 
 
 echo Done.

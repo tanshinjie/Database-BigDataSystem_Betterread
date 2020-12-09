@@ -6,10 +6,43 @@ python3\
 boto3\
 paramiko
 
-## Instructions
+## Quick Start
 
-Clone the project repository using the following command
-git clone https://github.com/tanshinjie/database_project.git
+Please execute the following in order.
+
+1. Clone the project repository using the following command
+
+   > git clone https://github.com/tanshinjie/database_project.git
+
+2. Change directory into hadoop
+
+   > cd ~/database_project/hadoop
+
+3. Start production
+
+   > python3 setup.py
+
+4. Start analytics
+
+   > python3 hadoop_setup.py
+
+5. Ingest Data
+
+   > python3 mongo_ingest.py \
+   > python3 mysql_ingest.py
+
+6. Scale HDFS \
+   Specify the number of new datanode in `hadoop_config.json` **scale_factor**, then
+
+   > python3 hadoop_scale_up.py
+
+   Specify the datanode hostnames in `hadoop_config.json` **excludes** list, then
+
+   > python3 hadoop_scale_down.py
+
+7. Teardown\
+   Default behavior is to terminate all instances with the **key_name** specified in the `config.json`
+   > python3 teardown.py
 
 For all system. please copy paste the AWS credentials `aws_access_key_id` , ` aws_secret_access_key`, ` aws_session_token` into **aws_token.txt**. The credentials will be parsed into automation script at the beginning of script.
 
@@ -20,7 +53,7 @@ The script will assume clean setup everytime.
 
 ### Production System
 
-To setup the web servers and databases, specify the parameters in the given `config.json` under `/hadoop/settings`directory. A new config file named `prod_config.json` will also be updated with other parameters after the creation of the servers. \
+To setup the web servers and databases, specify the parameters in the given `config.json` under `/hadoop/settings`directory. A new config file named `production_config.json` will also be updated with other parameters after the creation of the servers. \
 Execute
 `python3 setup.py` to launch three new EC2 servers.
 For inital setup, the parameters consulted by the scripts are:
@@ -88,8 +121,8 @@ The production system has the following features:
 The analytics system has the following features:
 
 1. Data ingestion
-2. Pearson Correlation
-3. TF-IDF
+2. Pearson Correlation (incomplete)
+3. TF-IDF (incomplete)
 4. Scaling of Hadoop Cluster
 5. Easy Start / Stop of Hadoop Cluster
 

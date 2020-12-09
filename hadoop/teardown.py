@@ -51,7 +51,6 @@ def teardown(mode, **kwargs):
 
 
 if __name__ == "__main__":
-
     config = load_config()
     session = boto3.session.Session(
         aws_access_key_id=aws_access_key_id,
@@ -62,4 +61,6 @@ if __name__ == "__main__":
 
     ec2 = session.client("ec2")
     ec2_resource = session.resource("ec2")
-    teardown("a", key_name="test-production")
+
+    # specify key name 
+    teardown("a", key_name=config['key_name'])

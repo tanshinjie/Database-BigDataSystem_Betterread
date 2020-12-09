@@ -1,7 +1,9 @@
 import subprocess
 from util import *
+import time
 
 if __name__ == "__main__":
+    start_time = time.time()
     config = load_config('./settings/hadoop_config.json')
     key_file = "./settings/{}.pem".format(config['key_name'])
     namenode_public_ip = config['namenode_public_ip']
@@ -13,5 +15,6 @@ if __name__ == "__main__":
     
     subprocess.run(cmd1,shell=True)
     subprocess.run(cmd2,shell=True)
+    print("--- {} seconds ---".format(time.time() - start_time))
 
 

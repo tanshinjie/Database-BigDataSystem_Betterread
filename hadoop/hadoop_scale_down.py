@@ -6,7 +6,7 @@ from util import *
 
 if __name__ == "__main__":
 
-    config = load_config("./settings/post_config.json")
+    config = load_config("./settings/hadoop_config.json")
 
     namenode_public_ip = config["namenode_public_ip"]
     key_file = "./settings/{}.pem".format(config["key_name"])

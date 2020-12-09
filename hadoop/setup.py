@@ -221,36 +221,20 @@ def execute_commands_in_instance_mongodb(public_ip_address, key_name):
 def execute_commands_in_instance_server(
     public_ip_address, key_name, github_username, github_password
 ):
-    key = paramiko.RSAKey.from_private_key_file('settings/'+key_name + ".pem")
-
-    client = paramiko.SSHClient()
-
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
     instance_ip = public_ip_address
 
-    cmd1 = "git clone https://{}:{}@github.com/tanshinjie/database_project.git".format(
+    clone_cmd = "git clone https://{}:{}@github.com/tanshinjie/database_project.git".format(
         github_username, github_password    #hohouyj,6be161cf885ca17ec448e4d98dbdef97b3bbd9f6
     )
-    cmd3 = "sh ~/database_project/setup.sh"
-    cmds = [cmd1,cmd3]
+    exec_cmd = "sh ~/database_project/setup.sh"
 
+    print("Setting up webserver on @ ip:{}".format(public_ip_address))
 
-    try:
-        client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
+    cmd1 = "ssh -i ./settings/{}.pem ubuntu@{} '{}'".format(key_name,instance_ip,clone_cmd)
+    cmd2 = "ssh -i ./settings/{}.pem ubuntu@{} '{}'".format(key_name,instance_ip,exec_cmd)
 
-        print("Setting up webserver on @ ip:{}".format(public_ip_address))
-
-        for cmd in cmds:
-            stdin, stdout, stderr = client.exec_command(cmd)
-            print(stdout.read().decode())
-            print(stdout.channel.recv_exit_status())
-
-        client.close()
-
-
-    except Exception as e:
-        print(e)
+    subprocess.run(cmd1,shell=True)
+    subprocess.run(cmd2,shell=True)
 
 def transfer_ips_to_webserver_instance(public_ip_address, key_name, iplist):
 
@@ -294,11 +278,12 @@ if __name__ == "__main__":
         iplist = {
             'mysql_ip' : instance[0].private_ip_address,
             'mongodb_ip' : instance[1].private_ip_address,
-            'webserver_ip' : instance[2].private_ip_address
+            'webserver_ip' : instance[2].public_ip_address
         }
         print('passing ips to webserver instance')
-        transfer_ips_to_webserver_instance(instance[2].public_ip_address, KEY_NAME, iplist)
 
+        transfer_ips_to_webserver_instance(instance[2].public_ip_address, KEY_NAME, iplist)
+        
         execute_commands_in_instance_server(instance[2].public_ip_address, KEY_NAME,github_username, github_password)#, iplist)
         print("webserver setup done, can view in:", instance[2].public_ip_address)
 

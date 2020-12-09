@@ -5,6 +5,7 @@ if __name__ == "__main__":
 
     config = load_config('./settings/hadoop_config.json')
     mongo_private_ip = load_config('./settings/production_config.json')['mongo_private_ip']
+
     namenode_public_ip = config['namenode_public_ip']
     key_name = config['key_name']
 

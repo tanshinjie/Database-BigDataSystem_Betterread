@@ -4,7 +4,7 @@
 
 echo Appending new datanode to workers...
 
-sudo su -c 'echo d4 >> /opt/hadoop-3.3.0/etc/hadoop/workers' hadoop
+sudo su -c 'echo d2 >> /opt/hadoop-3.3.0/etc/hadoop/workers' hadoop
 
 
 echo Done.

@@ -10,7 +10,7 @@ from datetime import datetime
 import json
 
 if __name__ == "__main__":
-    config = load_config("./settings/post_config.json")
+    config = load_config("./settings/hadoop_config.json")
     key_file = "./settings/{}.pem".format(config["key_name"])
 
     key = paramiko.RSAKey.from_private_key_file(key_file)
